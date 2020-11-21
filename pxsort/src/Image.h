@@ -13,6 +13,15 @@ namespace ps {
     
     class Image {
     public:
+        // TODO: - Use custom colour spaces defined by arbitrary invertible
+        //           linear maps in R^3. Constructor takes a Matx33f
+        //
+        //       - Next-level: non-linear maps? HSV is an example. Arbitrary
+        //           polar coordinate maps?
+        //
+        //       - Not worth implementing now. Need to see how big of a deal
+        //           color spaces are when making effects.
+
         /** Color spaces supported by the Image class. */
         enum ColorSpace {
             RGB = 0,
@@ -90,31 +99,3 @@ namespace ps {
 }
 
 #endif //PXSORT2_IMAGE_H
-
-
-//struct RGBPixel {
-//    float R;
-//    float G;
-//    float B;
-//};
-//
-//struct XYZPixel {
-//    float X;
-//    float Y;
-//    float Z;
-//};
-//
-//struct LabPixel {
-//    float L;
-//    float a;
-//    float b;
-//};
-//
-//// ...
-//// TODO: continue with these structs?
-//
-//typedef union Pixel {
-//    struct RGBPixel RGB;
-//    struct XYZPixel XYZ;
-//    struct LabPixel Lab;
-//} Pixel;
