@@ -1,13 +1,9 @@
-//
-// Created by gpg on 2020-11-18.
-//
-
 #ifndef PXSORT2_TILE_H
 #define PXSORT2_TILE_H
 
 #include "Image.h"
 
-#define MODULO(a, b)  ((a % b + b) % b)
+#define MODULO(a, b)  (((a) % (b) + (b)) % (b))
 #define LOG_2(x)      (31 - __builtin_clz(x))
 
 namespace ps {
@@ -58,10 +54,8 @@ namespace ps {
         void setPixel(int idx, Traversal t, ChannelSkew skew, const Pixel &px);
 
     private:
-
-
-        virtual Pixel forwardGetPixel(int idx, ChannelSkew skew) = 0;
-        virtual void forwardSetPixel(int idx, ChannelSkew skew, Pixel px) = 0;
+        virtual Pixel forwardGetPixel(int idx, ChannelSkew &skew) = 0;
+        virtual void forwardSetPixel(int idx, ChannelSkew &skew, Pixel &px) = 0;
 
         int getForwardIndex(int idx, Traversal t);
         int btbfToForwardIdx(int idx);

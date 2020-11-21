@@ -1,7 +1,3 @@
-//
-// Created by gpg on 2020-11-18.
-//
-
 #include "Image.h"
 #include <opencv2/core/affine.hpp>
 

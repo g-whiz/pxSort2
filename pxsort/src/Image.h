@@ -1,7 +1,3 @@
-//
-// Created by gpg on 2020-11-18.
-//
-
 #ifndef PXSORT2_IMAGE_H
 #define PXSORT2_IMAGE_H
 
@@ -32,6 +28,12 @@ namespace ps {
             HSV = 5,
             HLS = 6
         };
+
+        /** Mat containing the underlying pixel data for this Image.
+         *  It has shape: (height, width, 3).
+         *  Components are single-precision floating point numbers, regardless
+         *  of color space. */
+        cv::Mat pixels;
 
         /** Width of this image (in pixels). */
         const int width;
@@ -66,12 +68,6 @@ namespace ps {
         void * to_rgb32();
 
     private:
-        /** Mat containing the underlying pixel data for this Image.
-         *  It has shape: (height, width, 3).
-         *  Components are single-precision floating point numbers, regardless
-         *  of color space.*/
-        cv::Mat pixels;
-
         /** Map pixels from their normal color space to the unit cube. */
         void normalizePixels();
 

@@ -1,0 +1,55 @@
+#include "RectangleTile.h"
+
+using namespace ps;
+using namespace cv;
+
+int RectangleTile::size() {
+    return this->width * this->height;
+}
+
+Pixel RectangleTile::forwardGetPixel(int idx, ChannelSkew &skew) {
+    Point c0Coords = this->channelCoordinates(idx, skew, C0);
+    float c0 = this->img->pixels.at<float>(c0Coords.x, c0Coords.y, C0);
+
+    Point c1Coords = this->channelCoordinates(idx, skew, C1);
+    float c1 = this->img->pixels.at<float>(c1Coords.x, c1Coords.y, C1);
+
+    Point c2Coords = this->channelCoordinates(idx, skew, C2);
+    float c2 = this->img->pixels.at<float>(c2Coords.x, c2Coords.y, C2);
+
+    return Pixel(c0, c1, c2);
+}
+
+void RectangleTile::forwardSetPixel(int idx, ChannelSkew &skew, Pixel &px) {
+    Point c0Coords = this->channelCoordinates(idx, skew, C0);
+    (*this->img->pixels.ptr<float>(c0Coords.x, c0Coords.y, C0)) = px[C0];
+
+    Point c1Coords = this->channelCoordinates(idx, skew, C1);
+    (*this->img->pixels.ptr<float>(c1Coords.x, c1Coords.y, C1)) = px[C1];
+
+    Point c2Coords = this->channelCoordinates(idx, skew, C2);
+    (*this->img->pixels.ptr<float>(c2Coords.x, c2Coords.y, C2)) = px[C2];
+}
+
+RectangleTile::RectangleTile(Image * img, int width, int height, int x0, int y0)
+    : img(img), width(width), height(height), x0(x0), y0(y0) {
+    assert(width > 0);
+    assert(height > 0);
+    assert(width * height > 1);
+}
+
+Point RectangleTile::channelCoordinates(int idx, ChannelSkew &skew,
+                                        Channel channel) {
+    int tileChX = MODULO(idx, this->width);
+    int tileChY = MODULO(idx / this->width, this->height);
+
+    int dx = skew(0, channel);
+    int dy = skew(1, channel);
+
+    int chX = MODULO(MODULO(tileChX + dx, this->width) + this->x0,
+                     this->img->width);
+    int chY = MODULO(MODULO(tileChY + dy, this->height) + this->y0,
+                     this->height);
+
+    return {chX, chY};
+}
