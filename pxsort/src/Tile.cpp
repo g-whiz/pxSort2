@@ -43,3 +43,37 @@ int Tile::btbfToForwardIdx(int idx) {
                                         : (subtreeLoIdx + (subtreeSize / 2));
     return forwardIdx;
 }
+
+Tile::Tile(std::weak_ptr<Image> &img)
+    : weakImg(img), img(), effects() {}
+
+bool Tile::acquireImg() {
+    if (this->weakImg.expired())
+        return false;
+
+    this->img = this->weakImg.lock();
+    return true;
+}
+
+void Tile::releaseImg() {
+    this->img.reset();
+}
+
+void Tile::attach(std::unique_ptr<Effect> e) {
+    this->effects.push_back(std::move(e));
+    e->attach(*this);
+}
+
+void Tile::applyEffects() {
+    assert(this->img == nullptr);
+
+    // Do nothing if the underlying image has been deallocated.
+    // TODO: Debug log message here.
+    if (!acquireImg())
+        return;
+
+    for (auto & effect : this->effects) {
+        effect->apply(*this);
+    }
+    releaseImg();
+}

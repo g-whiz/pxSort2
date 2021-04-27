@@ -5,7 +5,7 @@
 
 namespace ps{
 
-    class RectangleTile : Tile {
+    class RectangleTile : public Tile {
     public:
         enum Channel {
             C0 = 0,
@@ -15,11 +15,18 @@ namespace ps{
 
         int size() override;
 
-        RectangleTile(Image * img, int width, int height, int x0, int y0);
+        RectangleTile(std::weak_ptr<Image> &img,
+                      int width, int height,
+                      int x0, int y0);
+
+    protected:
+        Pixel forwardGetPixel(int idx,
+                              ChannelSkew &skew) override;
+        void forwardSetPixel(int idx,
+                             ChannelSkew &skew,
+                             const Pixel &px) override;
 
     private:
-        /** The Image containing the underlying data referenced by this tile. */
-        Image * img;
         /** The width (in pixels) of this tile. */
         const int width;
         /** The height (in pixels) of this tile. */
@@ -28,9 +35,6 @@ namespace ps{
         const int x0;
         /** The y coordinate of the top-left pixel in this tile */
         const int y0;
-
-        Pixel forwardGetPixel(int idx, ChannelSkew &skew) override;
-        void forwardSetPixel(int idx, ChannelSkew &skew, Pixel &px) override;
 
         cv::Point channelCoordinates(int idx, ChannelSkew &skew,
                                  Channel channel);
