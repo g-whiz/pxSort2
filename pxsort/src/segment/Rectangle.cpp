@@ -1,13 +1,13 @@
-#include "RectangleTile.h"
+#include "Rectangle.h"
 
 using namespace ps;
 using namespace cv;
 
-int RectangleTile::size() {
+int Rectangle::size() {
     return this->width * this->height;
 }
 
-Pixel RectangleTile::forwardGetPixel(int idx, ChannelSkew &skew) {
+Pixel Rectangle::forwardGetPixel(int idx, ChannelSkew &skew) {
     assert(img != nullptr);
 
     Point c0Coords = this->channelCoordinates(idx, skew, C0);
@@ -22,7 +22,7 @@ Pixel RectangleTile::forwardGetPixel(int idx, ChannelSkew &skew) {
     return Pixel(c0, c1, c2);
 }
 
-void RectangleTile::forwardSetPixel(int idx, ChannelSkew &skew,
+void Rectangle::forwardSetPixel(int idx, ChannelSkew &skew,
                                     const Pixel &px) {
     assert(img != nullptr);
 
@@ -36,16 +36,16 @@ void RectangleTile::forwardSetPixel(int idx, ChannelSkew &skew,
     (*img->pixels.ptr<float>(c2Coords.x, c2Coords.y, C2)) = px[C2];
 }
 
-RectangleTile::RectangleTile(std::weak_ptr<Image> &img,
+Rectangle::Rectangle(std::weak_ptr<Image> &img,
                              int width, int height,
                              int x0, int y0)
-    : Tile(img), width(width), height(height), x0(x0), y0(y0) {
+    : Segment(img), width(width), height(height), x0(x0), y0(y0) {
     assert(width > 0);
     assert(height > 0);
     assert(width * height > 1);
 }
 
-Point RectangleTile::channelCoordinates(int idx,
+Point Rectangle::channelCoordinates(int idx,
                                         ChannelSkew &skew,
                                         Channel channel) {
     int image_width;

@@ -9,15 +9,6 @@ namespace ps {
     
     class Image {
     public:
-        // TODO: - Use custom colour spaces defined by arbitrary invertible
-        //           linear maps in R^3. Constructor takes a Matx33f
-        //
-        //       - Next-level: non-linear maps? HSV is an example. Arbitrary
-        //           polar coordinate maps?
-        //
-        //       - Not worth implementing now. Need to see how big of a deal
-        //           color spaces are when making effects.
-
         /** Color spaces supported by the Image class. */
         enum ColorSpace {
             RGB = 0,
@@ -48,24 +39,20 @@ namespace ps {
          * @param width The width of the image (in pixels).
          * @param height The height of the image (in pixels).
          * @param colorSpace The color space to use for this image's pixels.
-         * @param data *Borrowed* pointer to RGB32 pixel data of the input
-         *              image. This data is not mutated by this constructor.
-         *              This data can be safely freed after this constructor
-         *              returns.
+         * @param data Pointer to RGB32 pixel data of the input image.
          */
         Image(int width,
               int height,
               ColorSpace colorSpace,
-              void * data /* borrowed */);
+              std::unique_ptr<uint8_t[]> data);
 
         /**
          * Returns a pointer to a copy of the data in this image, transformed
-         *   to the RGB32 (i.e. 0xffRRGGBB) format.
-         * The caller is responsible for freeing the allocated data returned by
-         *  this method.
+         *   to the RGB32 (i.e. 0xffRRGGBB) format. The width and height of the
+         *   image in the returned data are the width and height of this Image.
          * @return
          */
-        void * to_rgb32();
+        std::unique_ptr<uint8_t[]> to_rgb32();
 
     private:
         /** Map pixels from their normal color space to the unit cube. */

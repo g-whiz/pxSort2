@@ -7,10 +7,10 @@ using namespace cv;
 Image::Image(int width,
              int height,
              ColorSpace colorSpace,
-             void *data /* borrowed */)
+             std::unique_ptr<uint8_t[]> data)
              : width(width), height(height),colorSpace(colorSpace) {
     // Create header for pixel data, then convert to floating point.
-    const Mat rawPixels(height, width, CV_8UC4, data);
+    const Mat rawPixels(height, width, CV_8UC4, data.get());
     rawPixels *= 1.f / 255;
 
     // Drop alpha channel, then convert color spaces as needed.
@@ -121,13 +121,13 @@ void Image::denormalizePixels() {
     transform(this->pixels, this->pixels, T);
 }
 
-void * Image::to_rgb32() {
+std::unique_ptr<uint8_t[]> Image::to_rgb32() {
     // map pixels to original color space
     denormalizePixels();
 
     // allocate our output buffer & create a Mat header for it
-    void * out_buf = malloc(4 * width * height);
-    Mat output4c(this->height, this->width, CV_8UC4, out_buf);
+    std::unique_ptr<uint8_t[]> out_buf(new uint8_t[4 * width * height]);
+    Mat output4c(this->height, this->width, CV_8UC4, out_buf.get());
 
     Mat output3f(this->height, this->width, CV_32FC3);
     if (this->colorSpace != RGB) {

@@ -1,8 +1,8 @@
-#include "Tile.h"
+#include "Segment.h"
 
 using namespace ps;
 
-int Tile::getForwardIndex(int idx, ps::Tile::Traversal t) {
+int Segment::getForwardIndex(int idx, ps::Segment::Traversal t) {
     idx = MODULO(idx, this->size());
     switch (t) {
         case FORWARD:
@@ -16,18 +16,18 @@ int Tile::getForwardIndex(int idx, ps::Tile::Traversal t) {
     }
 }
 
-void Tile::setPixel(int idx, Tile::Traversal t,
+void Segment::setPixel(int idx, Segment::Traversal t,
                     ChannelSkew skew, const Pixel &px) {
     int fwdIdx = this->getForwardIndex(idx, t);
     this->forwardSetPixel(fwdIdx, skew, px);
 }
 
-Pixel Tile::getPixel(int idx, Tile::Traversal t, ChannelSkew skew) {
+Pixel Segment::getPixel(int idx, Segment::Traversal t, ChannelSkew skew) {
     int fwdIdx = this->getForwardIndex(idx, t);
     return this->forwardGetPixel(fwdIdx, skew);
 }
 
-int Tile::btbfToForwardIdx(int idx) {
+int Segment::btbfToForwardIdx(int idx) {
 
     int depth = LOG_2(idx) - 1;
     int nSubtrees = 1 << depth;
@@ -44,10 +44,10 @@ int Tile::btbfToForwardIdx(int idx) {
     return forwardIdx;
 }
 
-Tile::Tile(std::weak_ptr<Image> &img)
+Segment::Segment(std::weak_ptr<Image> &img)
     : weakImg(img), img(), effects() {}
 
-bool Tile::acquireImg() {
+bool Segment::acquireImg() {
     if (this->weakImg.expired())
         return false;
 
@@ -55,16 +55,16 @@ bool Tile::acquireImg() {
     return true;
 }
 
-void Tile::releaseImg() {
+void Segment::releaseImg() {
     this->img.reset();
 }
 
-void Tile::attach(std::unique_ptr<Effect> e) {
+void Segment::attach(std::unique_ptr<Effect> e) {
     this->effects.push_back(std::move(e));
     e->attach(*this);
 }
 
-void Tile::applyEffects() {
+void Segment::applyEffects() {
     assert(this->img == nullptr);
 
     // Do nothing if the underlying image has been deallocated.

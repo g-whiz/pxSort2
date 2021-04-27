@@ -2,12 +2,12 @@
 // Created by gpg on 2021-04-21.
 //
 
-#include "GridTiling.h"
-#include "RectangleTile.h"
+#include "Grid.h"
+#include "src/segment/Rectangle.h"
 
 using namespace ps;
 
-GridTiling::GridTiling(const std::shared_ptr<Image>& img,
+Grid::Grid(const std::shared_ptr<Image>& img,
                        int rows, int columns,
                        int x0, int y0)
     : rows(rows), columns(columns),
@@ -18,11 +18,11 @@ GridTiling::GridTiling(const std::shared_ptr<Image>& img,
     initTiles(img);
 }
 
-int GridTiling::size() {
+int Grid::size() {
     return rows * columns;
 }
 
-GridTiling::TileSpec GridTiling::tileSpec(int idx) {
+Grid::TileSpec Grid::tileSpec(int idx) {
     int row = idx / columns;
     int col = MODULO(idx, columns);
 
@@ -45,14 +45,14 @@ GridTiling::TileSpec GridTiling::tileSpec(int idx) {
     return {tile_width, tile_height, tile_x0, tile_y0};
 }
 
-void GridTiling::initTiles(const std::shared_ptr<Image>& img) {
+void Grid::initTiles(const std::shared_ptr<Image>& img) {
     for (int idx = 0; idx < size(); idx++){
         auto weak_img = std::weak_ptr<Image>(img);
         auto[tile_width, tile_height, tile_x0, tile_y0] = tileSpec(idx);
 
-        std::unique_ptr<Tile> t(new RectangleTile(weak_img,
+        std::unique_ptr<Segment> t(new Rectangle(weak_img,
                                                   tile_width, tile_height,
                                                   tile_x0, tile_y0));
-        tiles.push_back(std::move(t));
+        segments.push_back(std::move(t));
     }
 }

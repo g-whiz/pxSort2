@@ -1,13 +1,13 @@
-#ifndef PXSORT2_GRIDTILING_H
-#define PXSORT2_GRIDTILING_H
+#ifndef PXSORT2_GRID_H
+#define PXSORT2_GRID_H
 
-#include "Tiling.h"
+#include "src/Segmentation.h"
 
 namespace ps {
 
-    class GridTiling : public Tiling {
+    class Grid : public Segmentation {
     public:
-        GridTiling(const std::shared_ptr<Image>& img,
+        Grid(const std::shared_ptr<Image>& img,
                    int rows,
                    int columns,
                    int x0,
@@ -31,4 +31,4 @@ namespace ps {
 }
 
 
-#endif //PXSORT2_GRIDTILING_H
+#endif //PXSORT2_GRID_H

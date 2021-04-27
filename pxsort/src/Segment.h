@@ -1,5 +1,5 @@
-#ifndef PXSORT2_TILE_H
-#define PXSORT2_TILE_H
+#ifndef PXSORT2_SEGMENT_H
+#define PXSORT2_SEGMENT_H
 
 #include "Image.h"
 #include "Effect.h"
@@ -25,33 +25,33 @@ namespace ps {
     /**
      * Interface for accessing a segment of an image.
      *
-     * The primary purpose of the Tile interface is to provide Effects with a
+     * The primary purpose of the Segment interface is to provide Effects with a
      *   1-dimensional array-like view of some subset of an image's pixels.
-     * In this sense, a tile maps an arbitrary subset of an Image's pixels to
+     * In this sense, a Segment maps an arbitrary subset of an Image's pixels to
      *   a virtual array.
      *
      * Implementing classes must implement the forwardGetPixel, and
      *   forwardSetPixel methods, which provide the virtual array semantics
      *   used by Effects.
      */
-    class Tile {
+    class Segment {
     public:
-        /** Traversal options for a Tile's pixels. */
+        /** Traversal options for a Segment's pixels. */
         enum Traversal {
             FORWARD,
             REVERSE,
             BINARY_TREE_BREADTH_FIRST
         };
 
-        /** Returns the number of pixels in this Tile. */
+        /** Returns the number of pixels in this Segment. */
         virtual
         int size() = 0;
 
         /**
          * Returns the skewed pixel at the given index according to the
          *   specified Traversal.
-         * @param idx Index of the pixel in this Tile.
-         * @param t Method of traversing the pixels in this Tile.
+         * @param idx Index of the pixel in this Segment.
+         * @param t Method of traversing the pixels in this Segment.
          * @param skew Skew to use when retrieving the specified pixel.
          */
         Pixel getPixel(int idx, Traversal t, ChannelSkew skew);
@@ -59,23 +59,23 @@ namespace ps {
         /**
          * Sets the skewed pixel at the given index according to the
          *    specified Traversal.
-         * @param idx Index of the pixel in this Tile.
-         * @param t Method of traversing the pixels in this Tile.
+         * @param idx Index of the pixel in this Segment.
+         * @param t Method of traversing the pixels in this Segment.
          * @param skew Skew to use when setting the specified pixel.
          * @param px The Pixel to store in the specified index.
          */
         void setPixel(int idx, Traversal t, ChannelSkew skew, const Pixel &px);
 
         /**
-         * Associates the given Effect with this Tile.
+         * Associates the given Effect with this Segment.
          *
          * @param e The effect to attach.
          */
         void attach(std::unique_ptr<Effect> e);
 
         /**
-         * Applies all Effects attached to this Tile once.
-         * In particular, for each Effect e associated with this Tile t, this
+         * Applies all Effects attached to this Segment once.
+         * In particular, for each Effect e associated with this Segment t, this
          *   function calls e.apply(t).
          *
          * Note that this function will apply effects in the order that they
@@ -85,7 +85,7 @@ namespace ps {
 
     protected:
         /**
-         * Retrieves a Pixel from this Tile's underlying Image using a FORWARD
+         * Retrieves a Pixel from this Segment's underlying Image using a FORWARD
          *   traversal strategy.
          * @param idx Index of the Pixel.
          * @param skew Skew of the Pixel
@@ -95,7 +95,7 @@ namespace ps {
                                       ChannelSkew &skew) = 0;
 
         /**
-         * Stores a Pixel from this Tile's underlying Image using a FORWARD
+         * Stores a Pixel from this Segment's underlying Image using a FORWARD
          *   traversal strategy.
          * @param idx Index of the Pixel.
          * @param skew Skew of the Pixel
@@ -105,7 +105,7 @@ namespace ps {
                                      ChannelSkew &skew,
                                      const Pixel &px) = 0;
 
-        Tile(std::weak_ptr<Image> &img);
+        Segment(std::weak_ptr<Image> &img);
 
         /** Temporary strong reference to the underlying */
         std::shared_ptr<Image> img;
@@ -130,10 +130,10 @@ namespace ps {
         std::vector<std::unique_ptr<Effect>> effects;
 
         /** Weak reference to the Image containing the underlying data
-         *    referenced by this tile. */
+         *    referenced by this Segment. */
         std::weak_ptr<Image> weakImg;
     };
 }
 
 
-#endif //PXSORT2_TILE_H
+#endif //PXSORT2_SEGMENT_H

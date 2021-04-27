@@ -1,11 +1,11 @@
-#ifndef PXSORT2_RECTANGLETILE_H
-#define PXSORT2_RECTANGLETILE_H
+#ifndef PXSORT2_RECTANGLE_H
+#define PXSORT2_RECTANGLE_H
 
-#include "Tile.h"
+#include "src/Segment.h"
 
-namespace ps{
+namespace ps {
 
-    class RectangleTile : public Tile {
+    class Rectangle : public Segment {
     public:
         enum Channel {
             C0 = 0,
@@ -15,7 +15,7 @@ namespace ps{
 
         int size() override;
 
-        RectangleTile(std::weak_ptr<Image> &img,
+        Rectangle(std::weak_ptr<Image> &img,
                       int width, int height,
                       int x0, int y0);
 
@@ -42,4 +42,4 @@ namespace ps{
 }
 
 
-#endif //PXSORT2_RECTANGLETILE_H
+#endif //PXSORT2_RECTANGLE_H

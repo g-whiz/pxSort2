@@ -9,13 +9,19 @@ add_library(libpxsort
         src/Image.cpp
         src/Effect.cpp
         src/Effect.h
-        src/Tile.cpp
-        src/Tile.h
-        src/Tiling.h
-        src/Tiling.cpp
-        src/RectangleTile.cpp
-        src/RectangleTile.h
-        src/GridTiling.cpp
-        src/GridTiling.h)
+        src/effect/CompareAndMix.h
+        src/effect/CompareAndMix.cpp
+        src/effect/BubbleSort.h
+        src/effect/BubbleSort.cpp
+        src/effect/Heapify.h
+        src/effect/Heapify.cpp
+        src/Segment.cpp
+        src/Segment.h
+        src/Segmentation.h
+        src/Segmentation.cpp
+        src/segment/Rectangle.cpp
+        src/segment/Rectangle.h
+        src/segmentation/Grid.cpp
+        src/segmentation/Grid.h)
 
 target_link_libraries(libpxsort OpenMP::OpenMP_CXX ${OpenCV_LIBS})
