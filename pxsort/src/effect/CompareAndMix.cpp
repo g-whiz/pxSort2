@@ -3,8 +3,8 @@
 //
 
 #include <utility>
-#include "src/Effect.h"
-#include "CompareAndMix.h"
+#include <src/Effect.h>
+#include <src/effect/CompareAndMix.h>
 
 using namespace ps;
 
