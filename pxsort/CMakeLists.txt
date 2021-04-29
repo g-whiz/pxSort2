@@ -24,6 +24,6 @@ add_library(libpxsort
         pxsort/segmentation/Grid.cpp
         pxsort/segmentation/Grid.h
         pxsort/Mixer.h
-        pxsort/Mixer.cpp)
+        pxsort/Mixer.cpp pxsort/Comparator.h pxsort/Comparator.cpp)
 
 target_link_libraries(libpxsort OpenMP::OpenMP_CXX ${OpenCV_LIBS})

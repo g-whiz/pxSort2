@@ -6,6 +6,7 @@
 #include <pxsort/Effect.h>
 #include <pxsort/effect/CompareAndMix.h>
 #include <pxsort/Mixer.h>
+#include <pxsort/Comparator.h>
 
 using namespace pxsort;
 

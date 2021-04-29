@@ -8,6 +8,7 @@
 #include <pxsort/Effect.h>
 #include <pxsort/effect/CompareAndMix.h>
 #include <pxsort/Mixer.h>
+#include <pxsort/Comparator.h>
 
 namespace pxsort {
     class BubbleSort : public CompareAndMix {
@@ -19,7 +20,7 @@ namespace pxsort {
         BubbleSort(const ChannelSkew &skew,
                    Segment::Traversal traversal,
                    const PixelComparator &cmp,
-                   const std::function<std::pair<Pixel, Pixel>(Pixel, Pixel)> &mix);
+                   const PixelMixer &mix);
 
     private:
         std::unique_ptr<Effect> clone() override;

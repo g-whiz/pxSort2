@@ -4,6 +4,7 @@
 
 #include <pxsort/effect/BubbleSort.h>
 #include <pxsort/Mixer.h>
+#include <pxsort/Comparator.h>
 
 using namespace pxsort;
 
@@ -30,7 +31,7 @@ void BubbleSort::apply(Segment &tile) {
 BubbleSort::BubbleSort(const ChannelSkew &skew,
                        const Segment::Traversal traversal,
                        const PixelComparator &cmp,
-                       const std::function<std::pair<Pixel, Pixel>(Pixel, Pixel)> &mix)
+                       const PixelMixer &mix)
         : CompareAndMix(skew, traversal, cmp, mix) {}
 
 std::unique_ptr<Effect> BubbleSort::clone() {

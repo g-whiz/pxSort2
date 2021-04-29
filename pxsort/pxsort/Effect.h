@@ -6,15 +6,6 @@
 namespace pxsort {
 
     /**
-     * A PixelComparator is a callable object that imposes some ordering on
-     *   Pixels.
-     * The value returned by a PixelComparator is negative, zero, or positive
-     *   when the first pixel is less-than, equal-to, or greater-than the second
-     *   pixel, respectively.
-     */
-    typedef std::function<int(Pixel, Pixel)> PixelComparator;
-
-    /**
      * Base interface for effects. An Effect is associated with a specific Segment.
      * Each time that apply() is called, an Effect will apply its effect to the
      *   given Segment, mutating the underlying Image in the process.

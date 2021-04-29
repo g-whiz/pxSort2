@@ -4,6 +4,7 @@
 
 #include <pxsort/effect/Heapify.h>
 #include <pxsort/Mixer.h>
+#include <pxsort/Comparator.h>
 
 using namespace pxsort;
 
@@ -54,9 +55,9 @@ void Heapify::apply(Segment &tile) {
 }
 
 Heapify::Heapify(const ChannelSkew &skew,
-                             const Segment::Traversal traversal,
-                             const PixelComparator &cmp,
-                             const std::function<std::pair<Pixel, Pixel>(Pixel, Pixel)> &mix)
+                 const Segment::Traversal traversal,
+                 const PixelComparator &cmp,
+                 const PixelMixer &mix)
         : CompareAndMix(skew, traversal, cmp, mix),
           idx_start(0),
           idx(0) {}

@@ -7,6 +7,7 @@
 
 #include <pxsort/effect/CompareAndMix.h>
 #include <pxsort/Mixer.h>
+#include <pxsort/Comparator.h>
 
 namespace pxsort {
 /**
@@ -27,7 +28,7 @@ namespace pxsort {
         Heapify(const ChannelSkew &skew,
                 Segment::Traversal traversal,
                 const PixelComparator &cmp,
-                const std::function<std::pair<Pixel, Pixel>(Pixel, Pixel)> &mix);
+                const PixelMixer &mix);
 
     private:
         // Heap left and right convenience methods (for readability)

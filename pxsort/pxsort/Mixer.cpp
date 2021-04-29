@@ -7,7 +7,7 @@
 using namespace pxsort;
 
 PixelMixer mixer::linearMixer(const Matx66f &T) {
-    return [=](Pixel in1, Pixel in2) {
+    return [=](const Pixel &in1, const Pixel &in2) {
         Vec6f in(in1[0], in1[1], in1[2], in2[0], in2[1], in2[2]);
         Vec6f out = T * in;
         Pixel out1(out[0], out[1], out[2]);
@@ -18,7 +18,7 @@ PixelMixer mixer::linearMixer(const Matx66f &T) {
 
 
 PixelMixer mixer::linearMixer(const std::shared_ptr<const Matx66f>& T) {
-    return [=](Pixel in1, Pixel in2) {
+    return [=](const Pixel &in1, const Pixel &in2) {
         Vec6f in(in1[0], in1[1], in1[2], in2[0], in2[1], in2[2]);
         Vec6f out = (*T) * in;
         Pixel out1(out[0], out[1], out[2]);
@@ -53,7 +53,7 @@ PixelMixer mixer::copier(mixer::InputChannel out1_r,
                          mixer::InputChannel out2_r,
                          mixer::InputChannel out2_g,
                          mixer::InputChannel out2_b) {
-    return [=](Pixel in1, Pixel in2) {
+    return [=](const Pixel &in1, const Pixel &in2) {
         std::array<float, 6> in({
             in1[0], in1[1], in1[2], in2[0], in2[1], in2[2]
         });

@@ -8,6 +8,7 @@
 #include <pxsort/Effect.h>
 #include <pxsort/Segment.h>
 #include <pxsort/Mixer.h>
+#include <pxsort/Comparator.h>
 
 namespace pxsort {
     /**
@@ -19,11 +20,11 @@ namespace pxsort {
         CompareAndMix(const ChannelSkew &skew,
                       Segment::Traversal traversal,
                       PixelComparator cmp,
-                      std::function<std::pair<Pixel, Pixel>(Pixel, Pixel)> mix);
+                      PixelMixer mix);
 
     protected:
         const PixelComparator cmp;
-        const std::function<std::pair<Pixel, Pixel>(Pixel, Pixel)> mix;
+        const PixelMixer mix;
 
     };
 }

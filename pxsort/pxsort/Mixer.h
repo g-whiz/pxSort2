@@ -16,7 +16,8 @@ namespace pxsort {
      * In this sense, a PixelMixer can be considered an endomorphism on the set
      *   [0, 1]^6.
      */
-    typedef std::function<std::pair<Pixel, Pixel>(Pixel, Pixel)> PixelMixer;
+    typedef std::function<std::pair<Pixel, Pixel>(const Pixel&, const Pixel&)>
+            PixelMixer;
 
     namespace mixer {
         /**
