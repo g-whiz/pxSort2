@@ -1,9 +1,9 @@
 #ifndef PXSORT2_SEGMENTATION_H
 #define PXSORT2_SEGMENTATION_H
 
-#include "Segment.h"
+#include <pxsort/Segment.h>
 
-namespace ps {
+namespace pxsort {
 
     /**
      * A segmentation of an Image.

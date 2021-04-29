@@ -1,7 +1,7 @@
 #include "Image.h"
 #include <opencv2/core/affine.hpp>
 
-using namespace ps;
+using namespace pxsort;
 using namespace cv;
 
 Image::Image(int width,
@@ -27,7 +27,7 @@ Image::Image(int width,
 void Image::normalizePixels() {
     Matx34f T;
 
-    // get the "normalizing" linear transform for this Image's color space
+    // get the "normalizing" linearMixer transform for this Image's color space
     switch (this->colorSpace) {
         case RGB: // if RGB, we are already done
             return;

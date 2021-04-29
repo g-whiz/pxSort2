@@ -1,9 +1,9 @@
 #ifndef PXSORT2_GRID_H
 #define PXSORT2_GRID_H
 
-#include "src/Segmentation.h"
+#include <pxsort/Segmentation.h>
 
-namespace ps {
+namespace pxsort {
 
     class Grid : public Segmentation {
     public:

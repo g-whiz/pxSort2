@@ -2,9 +2,10 @@
 // Created by gpg on 2021-04-26.
 //
 
-#include <src/effect/Heapify.h>
+#include <pxsort/effect/Heapify.h>
+#include <pxsort/Mixer.h>
 
-using namespace ps;
+using namespace pxsort;
 
 void Heapify::attach(Segment &tile) {
     this->idx_start = (tile.size() / 2) - 1;
@@ -29,14 +30,14 @@ void Heapify::apply(Segment &tile) {
         if (left < tile.size()) {
             if (auto result = this->compareAndMix(tile, i, left)) {
                 i = result.value();
-                continue; // swap occurred, keep bubbling
+                continue; // swapper occurred, keep bubbling
             }
         }
 
         if (right < tile.size()) {
             if (auto result = this->compareAndMix(tile, i, right)) {
                 i = result.value();
-                continue; // swap occurred, keep bubbling
+                continue; // swapper occurred, keep bubbling
             }
         }
 
@@ -55,7 +56,7 @@ void Heapify::apply(Segment &tile) {
 Heapify::Heapify(const ChannelSkew &skew,
                              const Segment::Traversal traversal,
                              const PixelComparator &cmp,
-                             const PixelMixer &mix)
+                             const std::function<std::pair<Pixel, Pixel>(Pixel, Pixel)> &mix)
         : CompareAndMix(skew, traversal, cmp, mix),
           idx_start(0),
           idx(0) {}
@@ -72,12 +73,12 @@ std::optional<int> Heapify::compareAndMix(Segment &tile,
         tile.setPixel(i_parent, this->traversal, NO_SKEW, new_parent);
         tile.setPixel(i_child, this->traversal, this->skew, new_child);
 
-        /* if a swap occurred, return the index of the child
+        /* if a swapper occurred, return the index of the child
          *   (to be used as the parent in the next pass) */
         return i_child;
     }
 
-    // no swap: indicate by returning "nothing"
+    // no swapper: indicate by returning "nothing"
     return {};
 }
 

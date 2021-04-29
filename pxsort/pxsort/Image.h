@@ -4,7 +4,7 @@
 #include <memory>
 #include <opencv2/imgproc.hpp>
 
-namespace ps {
+namespace pxsort {
     typedef cv::Vec3f Pixel;
     
     class Image {
@@ -47,7 +47,7 @@ namespace ps {
               std::unique_ptr<uint8_t[]> data);
 
         /**
-         * Returns a pointer to a copy of the data in this image, transformed
+         * Returns a pointer to a copier of the data in this image, transformed
          *   to the RGB32 (i.e. 0xffRRGGBB) format. The width and height of the
          *   image in the returned data are the width and height of this Image.
          * @return

@@ -5,14 +5,15 @@
 #ifndef PXSORT2_HEAPIFY_H
 #define PXSORT2_HEAPIFY_H
 
-#include <src/effect/CompareAndMix.h>
+#include <pxsort/effect/CompareAndMix.h>
+#include <pxsort/Mixer.h>
 
-namespace ps {
+namespace pxsort {
 /**
  * An Effect that applies a partial pass of the heapify algorithm each time
  *   apply is called. In particular, apply performs a pseudo-bubble-down
  *   operation on some element of a binary heap.
- * Since the mix operation doesn't necessarily perform a swap, this is not
+ * Since the mix operation doesn't necessarily perform a swapper, this is not
  *   a true bubble down operation. But the effect proceeds as if it were
  *   (i.e. it assumes we are making progress towards restoring the heap
  *   property).
@@ -26,7 +27,7 @@ namespace ps {
         Heapify(const ChannelSkew &skew,
                 Segment::Traversal traversal,
                 const PixelComparator &cmp,
-                const PixelMixer &mix);
+                const std::function<std::pair<Pixel, Pixel>(Pixel, Pixel)> &mix);
 
     private:
         // Heap left and right convenience methods (for readability)

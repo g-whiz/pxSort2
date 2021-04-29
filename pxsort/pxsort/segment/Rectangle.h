@@ -1,9 +1,9 @@
 #ifndef PXSORT2_RECTANGLE_H
 #define PXSORT2_RECTANGLE_H
 
-#include "src/Segment.h"
+#include <pxsort/Segment.h>
 
-namespace ps {
+namespace pxsort {
 
     class Rectangle : public Segment {
     public:
@@ -15,9 +15,9 @@ namespace ps {
 
         int size() override;
 
-        Rectangle(std::weak_ptr<Image> &img,
-                      int width, int height,
-                      int x0, int y0);
+        Rectangle(std::shared_ptr<Image> img,
+                  int width, int height,
+                  int x0, int y0);
 
     protected:
         Pixel forwardGetPixel(int idx,

@@ -7,7 +7,7 @@
 
 #include <opencv2/core/matx.hpp>
 
-namespace ps {
+namespace pxsort {
 
     /*
      * TODO: all exported functions, types, etc...

@@ -1,8 +1,8 @@
 #include "Segment.h"
 
-using namespace ps;
+using namespace pxsort;
 
-int Segment::getForwardIndex(int idx, ps::Segment::Traversal t) {
+int Segment::getForwardIndex(int idx, pxsort::Segment::Traversal t) {
     idx = MODULO(idx, this->size());
     switch (t) {
         case FORWARD:
@@ -44,20 +44,9 @@ int Segment::btbfToForwardIdx(int idx) {
     return forwardIdx;
 }
 
-Segment::Segment(std::weak_ptr<Image> &img)
-    : weakImg(img), img(), effects() {}
+Segment::Segment(std::shared_ptr<Image> img)
+    : img(std::move(img)), effects() {}
 
-bool Segment::acquireImg() {
-    if (this->weakImg.expired())
-        return false;
-
-    this->img = this->weakImg.lock();
-    return true;
-}
-
-void Segment::releaseImg() {
-    this->img.reset();
-}
 
 void Segment::attach(std::unique_ptr<Effect> e) {
     this->effects.push_back(std::move(e));
@@ -65,15 +54,7 @@ void Segment::attach(std::unique_ptr<Effect> e) {
 }
 
 void Segment::applyEffects() {
-    assert(this->img == nullptr);
-
-    // Do nothing if the underlying image has been deallocated.
-    // TODO: Debug log message here.
-    if (!acquireImg())
-        return;
-
     for (auto & effect : this->effects) {
         effect->apply(*this);
     }
-    releaseImg();
 }

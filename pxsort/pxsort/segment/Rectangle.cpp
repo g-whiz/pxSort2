@@ -1,6 +1,6 @@
-#include <src/segment/Rectangle.h>
+#include <pxsort/segment/Rectangle.h>
 
-using namespace ps;
+using namespace pxsort;
 using namespace cv;
 
 int Rectangle::size() {
@@ -36,27 +36,20 @@ void Rectangle::forwardSetPixel(int idx, ChannelSkew &skew,
     (*img->pixels.ptr<float>(c2Coords.x, c2Coords.y, C2)) = px[C2];
 }
 
-Rectangle::Rectangle(std::weak_ptr<Image> &img,
-                             int width, int height,
-                             int x0, int y0)
-    : Segment(img), width(width), height(height), x0(x0), y0(y0) {
+Rectangle::Rectangle(std::shared_ptr<Image> img,
+                     int width, int height,
+                     int x0, int y0)
+    : Segment(std::move(img)), width(width), height(height), x0(x0), y0(y0) {
     assert(width > 0);
     assert(height > 0);
     assert(width * height > 1);
+    assert(0 <= x0 && x0 < img->width);
+    assert(0 <= y0 && y0 < img->height);
 }
 
 Point Rectangle::channelCoordinates(int idx,
                                         ChannelSkew &skew,
                                         Channel channel) {
-    int image_width;
-
-    // Retrieve width of the underlying image.
-    // Assume width is 1 if the weak_ptr to image is expired.
-    if (!acquireImg())
-        image_width = 1;
-    else
-        image_width = img->width;
-    releaseImg();
 
     int tileChX = MODULO(idx, this->width);
     int tileChY = MODULO(idx / this->width, this->height);
@@ -65,7 +58,7 @@ Point Rectangle::channelCoordinates(int idx,
     int dy = skew(1, channel);
 
     int chX = MODULO(MODULO(tileChX + dx, this->width) + this->x0,
-                     image_width);
+                     img->width);
     int chY = MODULO(MODULO(tileChY + dy, this->height) + this->y0,
                      this->height);
 

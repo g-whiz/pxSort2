@@ -1,8 +1,8 @@
 #ifndef PXSORT2_SEGMENT_H
 #define PXSORT2_SEGMENT_H
 
-#include "Image.h"
-#include "Effect.h"
+#include <pxsort/Image.h>
+#include <pxsort/Effect.h>
 
 /**
  * Function for non-negative modular arithmetic.
@@ -10,7 +10,7 @@
 #define MODULO(a, b)  (((a) % (b) + (b)) % (b))
 #define LOG_2(x)      (31 - __builtin_clz(x))
 
-namespace ps {
+namespace pxsort {
 
     /** Matrix of the form [S_1 S_2 S_3], where each S_i is a vector of the form
      *    (dx, dy) defining the offset for retrieving the ith channel of a
@@ -105,35 +105,19 @@ namespace ps {
                                      ChannelSkew &skew,
                                      const Pixel &px) = 0;
 
-        Segment(std::weak_ptr<Image> &img);
+        Segment(std::shared_ptr<Image> img);
 
-        /** Temporary strong reference to the underlying */
+        /**
+         * Pointer to the underlying Image data for this segment.
+         */
         std::shared_ptr<Image> img;
-
-        /**
-         * Acquires a shared_ptr to the Image referenced by weakImg and stores
-         *   it in img. Returns true iff the shared_ptr was acquired
-         *   successfully.
-         * @return
-         */
-        bool acquireImg();
-
-        /**
-         * Clears the shared_ptr acquired by acquireImg().
-         */
-        void releaseImg();
 
     private:
         int getForwardIndex(int idx, Traversal t);
         int btbfToForwardIdx(int idx);
 
         std::vector<std::unique_ptr<Effect>> effects;
-
-        /** Weak reference to the Image containing the underlying data
-         *    referenced by this Segment. */
-        std::weak_ptr<Image> weakImg;
     };
 }
-
 
 #endif //PXSORT2_SEGMENT_H

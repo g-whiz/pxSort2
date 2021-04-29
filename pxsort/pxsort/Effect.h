@@ -1,9 +1,9 @@
 #ifndef PXSORT2_EFFECT_H
 #define PXSORT2_EFFECT_H
 
-#include <src/Segment.h>
+#include <pxsort/Segment.h>
 
-namespace ps {
+namespace pxsort {
 
     /**
      * A PixelComparator is a callable object that imposes some ordering on
@@ -13,14 +13,6 @@ namespace ps {
      *   pixel, respectively.
      */
     typedef std::function<int(Pixel, Pixel)> PixelComparator;
-
-    /**
-     * A PixelMixer is a callable object that mixes/transforms two pixels to
-     *   produce two new pixels.
-     * In this sense, a PixelMixer can be considered an endomorphism on the set
-     *   [0, 1]^6.
-     */
-    typedef std::function<std::pair<Pixel, Pixel>(Pixel, Pixel)> PixelMixer;
 
     /**
      * Base interface for effects. An Effect is associated with a specific Segment.
@@ -52,7 +44,7 @@ namespace ps {
         virtual void apply(Segment &tile) = 0;
 
         /**
-         * Returns a copy of this effect.
+         * Returns a copier of this effect.
          * @return
          */
         virtual std::unique_ptr<Effect> clone() = 0;

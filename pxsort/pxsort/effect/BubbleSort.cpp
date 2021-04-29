@@ -2,9 +2,10 @@
 // Created by gpg on 2021-04-26.
 //
 
-#include <src/effect/BubbleSort.h>
+#include <pxsort/effect/BubbleSort.h>
+#include <pxsort/Mixer.h>
 
-using namespace ps;
+using namespace pxsort;
 
 void BubbleSort::attach(Segment &tile) {
     // Nothing needs to be done here.
@@ -29,7 +30,7 @@ void BubbleSort::apply(Segment &tile) {
 BubbleSort::BubbleSort(const ChannelSkew &skew,
                        const Segment::Traversal traversal,
                        const PixelComparator &cmp,
-                       const PixelMixer &mix)
+                       const std::function<std::pair<Pixel, Pixel>(Pixel, Pixel)> &mix)
         : CompareAndMix(skew, traversal, cmp, mix) {}
 
 std::unique_ptr<Effect> BubbleSort::clone() {

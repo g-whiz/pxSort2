@@ -2,10 +2,10 @@
 // Created by gpg on 2021-04-21.
 //
 
-#include "Grid.h"
-#include "src/segment/Rectangle.h"
+#include <pxsort/segmentation/Grid.h>
+#include <pxsort/segment/Rectangle.h>
 
-using namespace ps;
+using namespace pxsort;
 
 Grid::Grid(const std::shared_ptr<Image>& img,
                        int rows, int columns,
@@ -47,12 +47,11 @@ Grid::TileSpec Grid::tileSpec(int idx) {
 
 void Grid::initTiles(const std::shared_ptr<Image>& img) {
     for (int idx = 0; idx < size(); idx++){
-        auto weak_img = std::weak_ptr<Image>(img);
         auto[tile_width, tile_height, tile_x0, tile_y0] = tileSpec(idx);
 
-        std::unique_ptr<Segment> t(new Rectangle(weak_img,
-                                                  tile_width, tile_height,
-                                                  tile_x0, tile_y0));
-        segments.push_back(std::move(t));
+        std::unique_ptr<Segment> tile(new Rectangle(img,
+                                                    tile_width, tile_height,
+                                                    tile_x0, tile_y0));
+        segments.push_back(std::move(tile));
     }
 }

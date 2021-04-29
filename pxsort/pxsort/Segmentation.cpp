@@ -1,4 +1,4 @@
-#include "Segmentation.h"
+#include <pxsort/Segmentation.h>
 
 /*
  * TODO: After implementing a single-threaded prototype algo, adapt for
@@ -11,7 +11,7 @@
  */
 #include <omp.h>
 
-using namespace ps;
+using namespace pxsort;
 
 void Segmentation::addEffect(std::unique_ptr<Effect> e) {
     for (auto &tile : segments) {

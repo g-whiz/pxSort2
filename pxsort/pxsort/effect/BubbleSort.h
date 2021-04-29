@@ -5,10 +5,11 @@
 #ifndef PXSORT2_BUBBLESORT_H
 #define PXSORT2_BUBBLESORT_H
 
-#include "src/Effect.h"
-#include "CompareAndMix.h"
+#include <pxsort/Effect.h>
+#include <pxsort/effect/CompareAndMix.h>
+#include <pxsort/Mixer.h>
 
-namespace ps {
+namespace pxsort {
     class BubbleSort : public CompareAndMix {
     public:
         void attach(Segment &tile) override;
@@ -18,7 +19,7 @@ namespace ps {
         BubbleSort(const ChannelSkew &skew,
                    Segment::Traversal traversal,
                    const PixelComparator &cmp,
-                   const PixelMixer &mix);
+                   const std::function<std::pair<Pixel, Pixel>(Pixel, Pixel)> &mix);
 
     private:
         std::unique_ptr<Effect> clone() override;
