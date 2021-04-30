@@ -1,6 +1,6 @@
-#include <pxsort.h>
+#include "Image.h"
 
-using namespace pxsort;
+using namespace ps;
 using namespace cv;
 
 Image::Image(int width,

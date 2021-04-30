@@ -1,6 +1,8 @@
-#include <pxsort.h>
+#include <utility>
+#include "Heapify.h"
+#include "Segment.h"
 
-using namespace pxsort;
+using namespace ps;
 
 void Heapify::attach(Segment &tile) {
     this->idx_start = (tile.size() / 2) - 1;
@@ -49,10 +51,12 @@ void Heapify::apply(Segment &tile) {
 }
 
 Heapify::Heapify(const ChannelSkew &skew,
-                 const Segment::Traversal traversal,
-                 const PixelComparator &cmp,
-                 const PixelMixer &mix)
-        : CompareAndMix(skew, traversal, cmp, mix),
+                 const SegmentTraversal traversal,
+                 PixelComparator cmp,
+                 PixelMixer mix)
+        : Effect(skew, traversal),
+          cmp(std::move(cmp)),
+          mix(std::move(mix)),
           idx_start(0),
           idx(0) {}
 
@@ -60,12 +64,12 @@ Heapify::Heapify(const ChannelSkew &skew,
 std::optional<int> Heapify::compareAndMix(Segment &tile,
                                                 int i_parent,
                                                 int i_child) {
-    Pixel parent = tile.getPixel(i_parent, this->traversal, NO_SKEW);
+    Pixel parent = tile.getPixel(i_parent, this->traversal, NO_SKEW());
     Pixel child = tile.getPixel(i_child, this->traversal, this->skew);
 
     if (this->cmp(parent, child) < 0) {
         auto[new_parent, new_child] = this->mix(parent, child);
-        tile.setPixel(i_parent, this->traversal, NO_SKEW, new_parent);
+        tile.setPixel(i_parent, this->traversal, NO_SKEW(), new_parent);
         tile.setPixel(i_child, this->traversal, this->skew, new_child);
 
         /* if a swapper occurred, return the index of the child
@@ -78,6 +82,5 @@ std::optional<int> Heapify::compareAndMix(Segment &tile,
 }
 
 std::unique_ptr<Effect> Heapify::clone() {
-    Effect *clone = new Heapify(skew, traversal, cmp, mix);
-    return std::unique_ptr<Effect>(clone);
+    return std::make_unique<Heapify>(skew, traversal, cmp, mix);
 }

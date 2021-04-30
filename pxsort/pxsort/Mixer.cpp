@@ -1,11 +1,11 @@
-#include <pxsort.h>
+#include "Mixer.h"
 
-using namespace pxsort;
+using namespace ps;
 
-PixelMixer mixer::linearMixer(const Matx66f &T) {
+PixelMixer mixer::linearMixer(const cv::Matx66f &T) {
     return [=](const Pixel &in1, const Pixel &in2) {
-        Vec6f in(in1[0], in1[1], in1[2], in2[0], in2[1], in2[2]);
-        Vec6f out = T * in;
+        cv::Vec6f in(in1[0], in1[1], in1[2], in2[0], in2[1], in2[2]);
+        cv::Vec6f out = T * in;
         Pixel out1(out[0], out[1], out[2]);
         Pixel out2(out[3], out[4], out[5]);
         return std::pair<Pixel, Pixel>(out1, out2);
@@ -13,10 +13,10 @@ PixelMixer mixer::linearMixer(const Matx66f &T) {
 }
 
 
-PixelMixer mixer::linearMixer(const std::shared_ptr<const Matx66f>& T) {
+PixelMixer mixer::linearMixer(const std::shared_ptr<const cv::Matx66f>& T) {
     return [=](const Pixel &in1, const Pixel &in2) {
-        Vec6f in(in1[0], in1[1], in1[2], in2[0], in2[1], in2[2]);
-        Vec6f out = (*T) * in;
+        cv::Vec6f in(in1[0], in1[1], in1[2], in2[0], in2[1], in2[2]);
+        cv::Vec6f out = (*T) * in;
         Pixel out1(out[0], out[1], out[2]);
         Pixel out2(out[3], out[4], out[5]);
         return std::pair<Pixel, Pixel>(out1, out2);

@@ -1,8 +1,9 @@
-#include <pxsort.h>
+#include "Effect.h"
+#include "Segment.h"
 
-using namespace pxsort;
+using namespace ps;
 
-int Segment::getForwardIndex(int idx, Segment::Traversal t) {
+int Segment::getForwardIndex(int idx, SegmentTraversal t) {
     idx = MODULO(idx, this->size());
     switch (t) {
         case REVERSE:
@@ -17,13 +18,13 @@ int Segment::getForwardIndex(int idx, Segment::Traversal t) {
     }
 }
 
-void Segment::setPixel(int idx, Segment::Traversal t,
+void Segment::setPixel(int idx, SegmentTraversal t,
                     ChannelSkew skew, const Pixel &px) {
     int fwdIdx = this->getForwardIndex(idx, t);
     this->forwardSetPixel(fwdIdx, skew, px);
 }
 
-Pixel Segment::getPixel(int idx, Segment::Traversal t, ChannelSkew skew) {
+Pixel Segment::getPixel(int idx, SegmentTraversal t, ChannelSkew skew) {
     int fwdIdx = this->getForwardIndex(idx, t);
     return this->forwardGetPixel(fwdIdx, skew);
 }
@@ -50,8 +51,8 @@ Segment::Segment(std::shared_ptr<Image> img)
 
 
 void Segment::attach(std::unique_ptr<Effect> e) {
-    this->effects.push_back(std::move(e));
     e->attach(*this);
+    this->effects.push_back(std::move(e));
 }
 
 void Segment::applyEffects() {

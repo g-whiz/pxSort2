@@ -1,16 +1,14 @@
 find_package(OpenCV REQUIRED core)
 find_package(OpenMP REQUIRED)
 
-include_directories(include)
+include_directories(pxsort)
 
-add_library(libpxsort
-        include/pxsort.h
+add_library(pxsort
+        pxsort/common.h
         pxsort/Image.h
         pxsort/Image.cpp
         pxsort/Effect.cpp
         pxsort/Effect.h
-        pxsort/effect/CompareAndMix.h
-        pxsort/effect/CompareAndMix.cpp
         pxsort/effect/BubbleSort.h
         pxsort/effect/BubbleSort.cpp
         pxsort/effect/Heapify.h
@@ -28,4 +26,4 @@ add_library(libpxsort
         pxsort/Comparator.h
         pxsort/Comparator.cpp)
 
-target_link_libraries(libpxsort OpenMP::OpenMP_CXX ${OpenCV_LIBS})
+target_link_libraries(pxsort OpenMP::OpenMP_CXX ${OpenCV_LIBS})

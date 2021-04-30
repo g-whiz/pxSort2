@@ -1,11 +1,14 @@
-#include <pxsort.h>
+#include "Grid.h"
+#include "Image.h"
+#include <pxsort/segment/Rectangle.h>
 
-using namespace pxsort;
+using namespace ps;
 
 Grid::Grid(const std::shared_ptr<Image>& img,
                        int rows, int columns,
                        int x0, int y0)
-    : rows(rows), columns(columns),
+    : Segmentation(),
+      rows(rows), columns(columns),
       x0(x0), y0(y0),
       img_width(img->width), img_height(img->height){
     assert(rows > 0);
@@ -44,9 +47,8 @@ void Grid::initTiles(const std::shared_ptr<Image>& img) {
     for (int idx = 0; idx < size(); idx++){
         auto[tile_width, tile_height, tile_x0, tile_y0] = tileSpec(idx);
 
-        std::unique_ptr<Segment> tile(new Rectangle(img,
-                                                    tile_width, tile_height,
-                                                    tile_x0, tile_y0));
+        std::unique_ptr<Segment> tile = std::make_unique<Rectangle>(
+                img, tile_width, tile_height, tile_x0, tile_y0);
         segments.push_back(std::move(tile));
     }
 }

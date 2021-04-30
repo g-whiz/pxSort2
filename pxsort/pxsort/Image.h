@@ -1,12 +1,12 @@
 #ifndef PXSORT2_IMAGE_H
 #define PXSORT2_IMAGE_H
 
+#include "common.h"
 #include <memory>
 #include <opencv2/imgproc.hpp>
 
-namespace pxsort {
-    typedef cv::Vec3f Pixel;
-    
+namespace ps {
+
     class Image {
     public:
         /** Color spaces supported by the Image class. */

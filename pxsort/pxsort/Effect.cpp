@@ -1,6 +1,6 @@
-#include <pxsort.h>
+#include "Effect.h"
 
-using namespace pxsort;
+using namespace ps;
 
-Effect::Effect(const ChannelSkew &skew, Segment::Traversal traversal)
+Effect::Effect(const ChannelSkew &skew, SegmentTraversal traversal)
     : skew(skew), traversal(traversal){}

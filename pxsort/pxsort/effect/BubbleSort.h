@@ -1,30 +1,27 @@
-//
-// Created by gpg on 2021-04-26.
-//
-
 #ifndef PXSORT2_BUBBLESORT_H
 #define PXSORT2_BUBBLESORT_H
 
-#include <pxsort/Effect.h>
-#include <pxsort/effect/CompareAndMix.h>
-#include <pxsort/Mixer.h>
-#include <pxsort/Comparator.h>
+#include <pxsort/common.h>
+#include "Effect.h"
 
-namespace pxsort {
-    class BubbleSort : public CompareAndMix {
-    public:
-        void attach(Segment &tile) override;
+using namespace ps;
 
-        void apply(Segment &tile) override;
+class ps::BubbleSort : public Effect {
+public:
+    BubbleSort(const ChannelSkew &skew,
+               SegmentTraversal traversal,
+               PixelComparator cmp,
+               PixelMixer mix);
 
-        BubbleSort(const ChannelSkew &skew,
-                   Segment::Traversal traversal,
-                   const PixelComparator &cmp,
-                   const PixelMixer &mix);
+private:
+    const PixelComparator cmp;
+    const PixelMixer mix;
 
-    private:
-        std::unique_ptr<Effect> clone() override;
-    };
-}
+    void attach(Segment &tile) override;
+
+    void apply(Segment &tile) override;
+
+    std::unique_ptr<Effect> clone() override;
+};
 
 #endif //PXSORT2_BUBBLESORT_H

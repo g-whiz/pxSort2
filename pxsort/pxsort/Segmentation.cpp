@@ -1,4 +1,6 @@
-#include <pxsort.h>
+#include "Segmentation.h"
+#include "Segment.h"
+#include "Effect.h"
 
 /*
  * TODO: After implementing a single-threaded prototype algo, adapt for
@@ -10,11 +12,11 @@
  *         graph-coloring approach.
  */
 
-using namespace pxsort;
+using namespace ps;
 
 void Segmentation::addEffect(std::unique_ptr<Effect> e) {
     for (auto &tile : segments) {
-        auto clone = e->clone();
+        std::unique_ptr<Effect> clone = e->clone();
         tile->attach(std::move(clone));
     }
 }
@@ -28,3 +30,6 @@ void Segmentation::applyEffects() {
         tile->applyEffects();
     }
 }
+
+Segmentation::Segmentation()
+    : segments() {}
