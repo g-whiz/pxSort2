@@ -43,3 +43,5 @@ add_library(pxsort
         pxsort/Comparator.cpp)
 
 target_link_libraries(pxsort OpenMP::OpenMP_CXX ${OpenCV_LIBS})
+
+add_subdirectory(test/qt-app-poc)
