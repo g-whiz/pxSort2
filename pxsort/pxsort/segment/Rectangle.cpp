@@ -1,4 +1,4 @@
-#include <pxsort/segment/Rectangle.h>
+#include <pxsort.h>
 
 using namespace pxsort;
 using namespace cv;

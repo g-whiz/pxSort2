@@ -1,18 +1,19 @@
-#include "Segment.h"
+#include <pxsort.h>
 
 using namespace pxsort;
 
-int Segment::getForwardIndex(int idx, pxsort::Segment::Traversal t) {
+int Segment::getForwardIndex(int idx, Segment::Traversal t) {
     idx = MODULO(idx, this->size());
     switch (t) {
-        case FORWARD:
-            return idx;
-
         case REVERSE:
             return (this->size() - 1) - idx;
 
         case BINARY_TREE_BREADTH_FIRST:
             return btbfToForwardIdx(idx);
+
+        case FORWARD:
+        default:
+            return idx;  // assume FORWARD if we get an invalid Traversal
     }
 }
 

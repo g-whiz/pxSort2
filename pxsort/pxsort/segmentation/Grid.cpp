@@ -1,9 +1,4 @@
-//
-// Created by gpg on 2021-04-21.
-//
-
-#include <pxsort/segmentation/Grid.h>
-#include <pxsort/segment/Rectangle.h>
+#include <pxsort.h>
 
 using namespace pxsort;
 

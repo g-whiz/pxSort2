@@ -1,12 +1,4 @@
-//
-// Created by gpg on 2021-04-26.
-//
-
-#include <utility>
-#include <pxsort/Effect.h>
-#include <pxsort/effect/CompareAndMix.h>
-#include <pxsort/Mixer.h>
-#include <pxsort/Comparator.h>
+#include <pxsort.h>
 
 using namespace pxsort;
 

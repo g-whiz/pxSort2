@@ -1,8 +1,4 @@
-#include "Effect.h"
-#include "pxsort/effect/BubbleSort.h"
-#include "pxsort/effect/Heapify.h"
-
-#include <utility>
+#include <pxsort.h>
 
 using namespace pxsort;
 

@@ -49,7 +49,4 @@ namespace pxsort {
     };
 }
 
-
-
-
 #endif //PXSORT2_EFFECT_H

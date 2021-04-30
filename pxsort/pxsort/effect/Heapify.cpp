@@ -1,10 +1,4 @@
-//
-// Created by gpg on 2021-04-26.
-//
-
-#include <pxsort/effect/Heapify.h>
-#include <pxsort/Mixer.h>
-#include <pxsort/Comparator.h>
+#include <pxsort.h>
 
 using namespace pxsort;
 

@@ -1,8 +1,4 @@
-//
-// Created by gpg on 2021-04-28.
-//
-
-#include <pxsort/Mixer.h>
+#include <pxsort.h>
 
 using namespace pxsort;
 
@@ -43,6 +39,7 @@ PixelMixer mixer::swapper(mixer::Swap s) {
         case GB:
             return mixer::copier(IN1_R, IN2_G, IN2_B, IN2_R, IN1_G, IN1_B);
         case RGB:
+        default:  // assume RGB if we get an invalid Swap
             return mixer::copier(IN2_R, IN2_G, IN2_B, IN1_R, IN1_G, IN1_B);
     }
 }

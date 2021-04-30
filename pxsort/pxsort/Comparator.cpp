@@ -1,8 +1,4 @@
-//
-// Created by gpg on 2021-04-29.
-//
-
-#include <pxsort/Comparator.h>
+#include <pxsort.h>
 
 using namespace pxsort;
 

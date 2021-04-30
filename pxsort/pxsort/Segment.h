@@ -2,7 +2,6 @@
 #define PXSORT2_SEGMENT_H
 
 #include <pxsort/Image.h>
-#include <pxsort/Effect.h>
 
 /**
  * Function for non-negative modular arithmetic.
@@ -11,6 +10,8 @@
 #define LOG_2(x)      (31 - __builtin_clz(x))
 
 namespace pxsort {
+    // Forward declaration
+    class Effect;
 
     /** Matrix of the form [S_1 S_2 S_3], where each S_i is a vector of the form
      *    (dx, dy) defining the offset for retrieving the ith channel of a

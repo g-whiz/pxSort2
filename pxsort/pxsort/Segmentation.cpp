@@ -1,4 +1,4 @@
-#include <pxsort/Segmentation.h>
+#include <pxsort.h>
 
 /*
  * TODO: After implementing a single-threaded prototype algo, adapt for
@@ -9,7 +9,6 @@
  *       Note: to build execution plan from dependency graph, use a
  *         graph-coloring approach.
  */
-#include <omp.h>
 
 using namespace pxsort;
 
