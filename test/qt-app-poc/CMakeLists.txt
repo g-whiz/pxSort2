@@ -1,14 +1,10 @@
-cmake_minimum_required(VERSION 3.5)
-
-project(qt-app-poc LANGUAGES CXX)
-
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # QtCreator supports the following variables for Android, which are identical to qmake Android variables.
@@ -31,20 +27,14 @@ set(Qt5_DIR /home/gpg/Qt/5.15.1/gcc_64/lib/cmake/Qt5)
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
-if(ANDROID)
-  add_library(qt-app-poc SHARED
+add_executable(qt-app-poc
     main.cpp
     mainwindow.cpp
     mainwindow.h
     mainwindow.ui
-  )
-else()
-  add_executable(qt-app-poc
-    main.cpp
-    mainwindow.cpp
-    mainwindow.h
-    mainwindow.ui
-  )
-endif()
+        )
 
-target_link_libraries(qt-app-poc PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+add_dependencies(qt-app-poc pxsort)
+file(COPY "../../pxsort" DESTINATION "./")
+target_include_directories(qt-app-poc PUBLIC "./pxsort")
+target_link_libraries(qt-app-poc PRIVATE Qt${QT_VERSION_MAJOR}::Widgets ${OpenCV_LIBS} pxsort)

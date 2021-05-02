@@ -3,18 +3,29 @@
 using namespace ps;
 using namespace cv;
 
+Image::ColorSpace validate(Image::ColorSpace colorSpace) {
+    if (colorSpace < 0 || colorSpace > 6) {
+        return Image::RGB;
+    }
+    return colorSpace;
+}
+
 Image::Image(int width,
              int height,
              ColorSpace colorSpace,
              std::unique_ptr<uint8_t[]> data)
-             : width(width), height(height),colorSpace(colorSpace) {
+             : width(width),
+             height(height),
+             colorSpace(validate(colorSpace)) {
     // Create header for pixel data, then convert to floating point.
-    const Mat rawPixels(height, width, CV_8UC4, data.get());
-    rawPixels *= 1.f / 255;
+    Mat rawPixels(height, width, CV_8UC4, data.get());
+    Mat floatPixels;
+    rawPixels.convertTo(floatPixels, CV_32FC4);
+    floatPixels *= 1.0 / 255.0;
 
     // Drop alpha channel, then convert color spaces as needed.
     this->pixels = Mat(height, width, CV_32FC3);
-    cvtColor(rawPixels, this->pixels, COLOR_BGRA2RGB);
+    cvtColor(floatPixels, this->pixels, COLOR_BGRA2RGB);
     if (colorSpace != RGB) {
         auto code = Image::fromRGB[colorSpace - 1];
         cvtColor(this->pixels, this->pixels, code);
@@ -140,7 +151,7 @@ std::unique_ptr<uint8_t[]> Image::to_rgb32() {
     // convert channels from float to byte then add an alpha channel &
     // rearrange to get RGB32 in out_buf
     Mat output3c;
-    output3c.convertTo(output3c, CV_8UC3, 255);
+    output3f.convertTo(output3c, CV_8UC3, 255);
     cvtColor(output3c, output4c, COLOR_RGB2BGRA);
 
     // map pixels back to unit cube

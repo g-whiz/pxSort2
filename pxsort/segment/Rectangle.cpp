@@ -47,8 +47,8 @@ Rectangle::Rectangle(std::shared_ptr<Image> img,
     assert(width > 0);
     assert(height > 0);
     assert(width * height > 1);
-    assert(0 <= x0 && x0 < img->width);
-    assert(0 <= y0 && y0 < img->height);
+    assert(0 <= x0 && x0 < this->img->width);
+    assert(0 <= y0 && y0 < this->img->height);
 }
 
 Point Rectangle::channelCoordinates(int idx,

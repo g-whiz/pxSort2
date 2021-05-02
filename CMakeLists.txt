@@ -11,13 +11,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(OpenCV REQUIRED core)
+find_package(OpenCV REQUIRED core imgproc)
 find_package(OpenMP REQUIRED)
-
-find_package(OpenCV REQUIRED core)
-find_package(OpenMP REQUIRED)
-
-include_directories(pxsort)
 
 add_library(pxsort
         pxsort/common.h
@@ -41,6 +36,7 @@ add_library(pxsort
         pxsort/Mixer.cpp
         pxsort/Comparator.h
         pxsort/Comparator.cpp)
+target_include_directories(pxsort PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/pxsort)
 
 target_link_libraries(pxsort OpenMP::OpenMP_CXX ${OpenCV_LIBS})
 
