@@ -1,10 +1,10 @@
 #ifndef PXSORT2_GRID_H
 #define PXSORT2_GRID_H
 
-#include <pxsort/common.h>
+#include "common.h"
 #include "Segmentation.h"
 
-class ps::Grid : public Segmentation {
+class pxsort::Grid : public Segmentation {
 public:
     Grid(const std::shared_ptr<Image>& img,
                int rows,

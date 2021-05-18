@@ -12,7 +12,7 @@
  *         graph-coloring approach.
  */
 
-using namespace ps;
+using namespace pxsort;
 
 void Segmentation::addEffect(std::unique_ptr<Effect> e) {
     for (auto &tile : segments) {
@@ -26,7 +26,9 @@ void Segmentation::addEffect(std::unique_ptr<Effect> e, const int segment) {
 }
 
 void Segmentation::applyEffects() {
-    for (auto &tile : segments) {
+#pragma omp parallel for default(none)
+    for (int i = 0; i < segments.size(); i++) {
+        auto const& tile = segments[i];
         tile->applyEffects();
     }
 }

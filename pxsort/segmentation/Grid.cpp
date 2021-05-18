@@ -1,8 +1,8 @@
 #include "Grid.h"
 #include "Image.h"
-#include <pxsort/segment/Rectangle.h>
+#include "segment/Rectangle.h"
 
-using namespace ps;
+using namespace pxsort;
 
 Grid::Grid(const std::shared_ptr<Image>& img,
                        int rows, int columns,
@@ -22,10 +22,10 @@ int Grid::size() {
 
 Grid::TileSpec Grid::tileSpec(int idx) {
     int row = idx / columns;
-    int col = MODULO(idx, columns);
+    int col = PS_MODULO(idx, columns);
 
-    int width_residue = MODULO(img_width, columns);
-    int height_residue = MODULO(img_height, rows);
+    int width_residue = PS_MODULO(img_width, columns);
+    int height_residue = PS_MODULO(img_height, rows);
 
     int tile_width = img_width / columns + (col < width_residue ? 1 : 0);
     int tile_height = img_height / rows + (row < height_residue ? 1 : 0);
@@ -33,12 +33,12 @@ Grid::TileSpec Grid::tileSpec(int idx) {
     // NOTE: we use the torus topology here for "wrap arounds"
     // TODO: implement more general topology code (supporting torus,
     //       x/y klein bottles, real projective plane)
-    int tile_x0 = MODULO(x0 + col * (img_width / columns)
+    int tile_x0 = PS_MODULO(x0 + col * (img_width / columns)
                             + MAX(0, MIN(col, width_residue)),
-                         img_width);
-    int tile_y0 = MODULO(y0 + row * (img_height / rows)
+                            img_width);
+    int tile_y0 = PS_MODULO(y0 + row * (img_height / rows)
                             + MAX(0, MIN(row, height_residue - 1)),
-                         img_height);
+                            img_height);
 
     return {tile_width, tile_height, tile_x0, tile_y0};
 }

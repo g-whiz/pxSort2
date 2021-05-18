@@ -1,10 +1,10 @@
 #include "Effect.h"
 #include "Segment.h"
 
-using namespace ps;
+using namespace pxsort;
 
 int Segment::getForwardIndex(int idx, SegmentTraversal t) {
-    idx = MODULO(idx, this->size());
+    idx = PS_MODULO(idx, this->size());
     switch (t) {
         case REVERSE:
             return (this->size() - 1) - idx;
@@ -31,11 +31,11 @@ Pixel Segment::getPixel(int idx, SegmentTraversal t, ChannelSkew skew) {
 
 int Segment::btbfToForwardIdx(int idx) {
 
-    int depth = LOG_2(idx) - 1;
+    int depth = PS_LOG_2(idx) - 1;
     int nSubtrees = 1 << depth;
-    int subtree = MODULO((idx + 1), nSubtrees);
+    int subtree = PS_MODULO((idx + 1), nSubtrees);
 
-    int fullHeight = LOG_2(this->size()) - 1;
+    int fullHeight = PS_LOG_2(this->size()) - 1;
     int subtreeHeight = fullHeight - depth;
 
     int subtreeSize = (1 << subtreeHeight) - 1;
@@ -46,17 +46,13 @@ int Segment::btbfToForwardIdx(int idx) {
     return forwardIdx;
 }
 
-Segment::Segment(std::shared_ptr<Image> img)
-    : img(std::move(img)), effects() {}
-
-
 void Segment::attach(std::unique_ptr<Effect> e) {
     e->attach(*this);
     this->effects.push_back(std::move(e));
 }
 
 void Segment::applyEffects() {
-    for (auto & effect : this->effects) {
+    for (auto const& effect : this->effects) {
         effect->apply(*this);
     }
 }

@@ -1,14 +1,14 @@
 #include <utility>
-#include "BubbleSort.h"
+#include "PartialBubbleSort.h"
 #include "Segment.h"
 
-using namespace ps;
+using namespace pxsort;
 
-void BubbleSort::attach(Segment &tile) {
+void PartialBubbleSort::attach(Segment &tile) {
     // Nothing needs to be done here.
 }
 
-void BubbleSort::apply(Segment &tile) {
+void PartialBubbleSort::apply(Segment &tile) {
     for (int i = 1; i < tile.size(); i++) {
         Pixel left = tile.getPixel(i - 1, this->traversal, NO_SKEW());
         Pixel right = tile.getPixel(i, this->traversal, this->skew);
@@ -24,12 +24,12 @@ void BubbleSort::apply(Segment &tile) {
     }
 }
 
-BubbleSort::BubbleSort(const ChannelSkew &skew,
-                       const SegmentTraversal traversal,
-                       PixelComparator cmp,
-                       PixelMixer mix)
+PartialBubbleSort::PartialBubbleSort(const ChannelSkew &skew,
+                                     const SegmentTraversal traversal,
+                                     PixelComparator cmp,
+                                     PixelMixer mix)
         : Effect(skew, traversal), cmp(std::move(cmp)), mix(std::move(mix)) {}
 
-std::unique_ptr<Effect> BubbleSort::clone() {
-    return std::make_unique<BubbleSort>(skew, traversal, cmp, mix);
+std::unique_ptr<Effect> PartialBubbleSort::clone() {
+    return std::make_unique<PartialBubbleSort>(skew, traversal, cmp, mix);
 }

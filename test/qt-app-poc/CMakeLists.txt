@@ -35,6 +35,5 @@ add_executable(qt-app-poc
         )
 
 add_dependencies(qt-app-poc pxsort)
-file(COPY "../../pxsort" DESTINATION "./")
-target_include_directories(qt-app-poc PUBLIC "./pxsort")
+target_include_directories(qt-app-poc PRIVATE ${CMAKE_SOURCE_DIR}/pxsort)
 target_link_libraries(qt-app-poc PRIVATE Qt${QT_VERSION_MAJOR}::Widgets ${OpenCV_LIBS} pxsort)

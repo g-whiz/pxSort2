@@ -1,7 +1,7 @@
-#ifndef PXSORT2_HEAPIFY_H
-#define PXSORT2_HEAPIFY_H
+#ifndef PXSORT2_PARTIALHEAPIFY_H
+#define PXSORT2_PARTIALHEAPIFY_H
 
-#include <pxsort/common.h>
+#include "common.h"
 #include "Effect.h"
 
 /**
@@ -13,13 +13,13 @@
  *   (i.e. it assumes we are making progress towards restoring the heap
  *   property).
  */
-class ps::Heapify : public Effect {
+class pxsort::PartialHeapify : public Effect {
 public:
     void attach(Segment &tile) override;
 
     void apply(Segment &tile) override;
 
-    Heapify(const ChannelSkew &skew,
+    PartialHeapify(const ChannelSkew &skew,
             SegmentTraversal traversal,
             PixelComparator cmp,
             PixelMixer mix);
@@ -48,4 +48,4 @@ private:
 };
 
 
-#endif //PXSORT2_HEAPIFY_H
+#endif //PXSORT2_PARTIALHEAPIFY_H

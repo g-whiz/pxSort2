@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.18)
 
 project(pxsort2 LANGUAGES CXX)
 
@@ -11,33 +11,6 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(OpenCV REQUIRED core imgproc)
-find_package(OpenMP REQUIRED)
-
-add_library(pxsort
-        pxsort/common.h
-        pxsort/Image.h
-        pxsort/Image.cpp
-        pxsort/Effect.cpp
-        pxsort/Effect.h
-        pxsort/effect/BubbleSort.h
-        pxsort/effect/BubbleSort.cpp
-        pxsort/effect/Heapify.h
-        pxsort/effect/Heapify.cpp
-        pxsort/Segment.cpp
-        pxsort/Segment.h
-        pxsort/Segmentation.h
-        pxsort/Segmentation.cpp
-        pxsort/segment/Rectangle.cpp
-        pxsort/segment/Rectangle.h
-        pxsort/segmentation/Grid.cpp
-        pxsort/segmentation/Grid.h
-        pxsort/Mixer.h
-        pxsort/Mixer.cpp
-        pxsort/Comparator.h
-        pxsort/Comparator.cpp)
-target_include_directories(pxsort PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/pxsort)
-
-target_link_libraries(pxsort OpenMP::OpenMP_CXX ${OpenCV_LIBS})
-
+add_subdirectory(pxsort)
 add_subdirectory(test/qt-app-poc)
+add_subdirectory(python)

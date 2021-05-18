@@ -4,7 +4,7 @@
 #include "Rectangle.h"
 
 
-using namespace ps;
+using namespace pxsort;
 using namespace cv;
 
 int Rectangle::size() {
@@ -14,14 +14,14 @@ int Rectangle::size() {
 Pixel Rectangle::forwardGetPixel(int idx, ChannelSkew &skew) {
     assert(img != nullptr);
 
-    Point c0Coords = this->channelCoordinates(idx, skew, C0);
-    float c0 = img->pixels.at<float>(c0Coords.x, c0Coords.y, C0);
+    Point c0Coords = this->channelCoordinates(idx, skew, R);
+    float c0 = img->pixels.at<Vec3f>(c0Coords.y, c0Coords.x)[R];
 
-    Point c1Coords = this->channelCoordinates(idx, skew, C1);
-    float c1 = img->pixels.at<float>(c1Coords.x, c1Coords.y, C1);
+    Point c1Coords = this->channelCoordinates(idx, skew, G);
+    float c1 = img->pixels.at<Vec3f>(c1Coords.y, c1Coords.x)[G];
 
-    Point c2Coords = this->channelCoordinates(idx, skew, C2);
-    float c2 = img->pixels.at<float>(c2Coords.x, c2Coords.y, C2);
+    Point c2Coords = this->channelCoordinates(idx, skew, B);
+    float c2 = img->pixels.at<Vec3f>(c2Coords.y, c2Coords.x)[B];
 
     return Pixel(c0, c1, c2);
 }
@@ -30,20 +30,23 @@ void Rectangle::forwardSetPixel(int idx, ChannelSkew &skew,
                                     const Pixel &px) {
     assert(img != nullptr);
 
-    Point c0Coords = this->channelCoordinates(idx, skew, C0);
-    (*img->pixels.ptr<float>(c0Coords.x, c0Coords.y, C0)) = px[C0];
+    Point c0Coords = this->channelCoordinates(idx, skew, R);
+    (*img->pixels.ptr<Vec3f>(c0Coords.y, c0Coords.x))[R] = px[R];
 
-    Point c1Coords = this->channelCoordinates(idx, skew, C1);
-    (*img->pixels.ptr<float>(c1Coords.x, c1Coords.y, C1)) = px[C1];
+    Point c1Coords = this->channelCoordinates(idx, skew, G);
+    (*img->pixels.ptr<Vec3f>(c1Coords.y, c1Coords.x))[G] = px[G];
 
-    Point c2Coords = this->channelCoordinates(idx, skew, C2);
-    (*img->pixels.ptr<float>(c2Coords.x, c2Coords.y, C2)) = px[C2];
+    Point c2Coords = this->channelCoordinates(idx, skew, B);
+    (*img->pixels.ptr<Vec3f>(c2Coords.y, c2Coords.x))[B] = px[B];
 }
 
 Rectangle::Rectangle(std::shared_ptr<Image> img,
                      int width, int height,
                      int x0, int y0)
-    : Segment(std::move(img)), width(width), height(height), x0(x0), y0(y0) {
+    : Segment(),
+      img(std::move(img)),
+      width(width), height(height),
+      x0(x0), y0(y0) {
     assert(width > 0);
     assert(height > 0);
     assert(width * height > 1);
@@ -55,16 +58,16 @@ Point Rectangle::channelCoordinates(int idx,
                                         ChannelSkew &skew,
                                         Channel channel) {
 
-    int tileChX = MODULO(idx, this->width);
-    int tileChY = MODULO(idx / this->width, this->height);
+    int tileChX = PS_MODULO(idx, this->width);
+    int tileChY = PS_MODULO(idx / this->width, this->height);
 
     int dx = skew(0, channel);
     int dy = skew(1, channel);
 
-    int chX = MODULO(MODULO(tileChX + dx, this->width) + this->x0,
-                     img->width);
-    int chY = MODULO(MODULO(tileChY + dy, this->height) + this->y0,
-                     this->height);
+    int chX = PS_MODULO(PS_MODULO(tileChX + dx, this->width) + this->x0,
+                        img->width);
+    int chY = PS_MODULO(PS_MODULO(tileChY + dy, this->height) + this->y0,
+                        img->height);
 
     return {chX, chY};
 }

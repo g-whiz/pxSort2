@@ -3,12 +3,12 @@
 
 #include "Segment.h"
 
-class ps::Rectangle : public Segment {
+class pxsort::Rectangle : public Segment {
 public:
     enum Channel {
-        C0 = 0,
-        C1 = 1,
-        C2 = 2
+        R = 0,
+        G = 1,
+        B = 2
     };
 
     int size() override;
@@ -25,6 +25,11 @@ protected:
                          const Pixel &px) override;
 
 private:
+    /**
+     * Pointer to the underlying Image data for this Rectangle.
+     */
+    std::shared_ptr<Image> img;
+
     /** The width (in pixels) of this tile. */
     const int width;
     /** The height (in pixels) of this tile. */

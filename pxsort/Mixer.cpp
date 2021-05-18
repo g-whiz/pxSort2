@@ -1,6 +1,6 @@
 #include "Mixer.h"
 
-using namespace ps;
+using namespace pxsort;
 
 PixelMixer mixer::linearMixer(const cv::Matx66f &T) {
     return [=](const Pixel &in1, const Pixel &in2) {

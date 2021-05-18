@@ -6,32 +6,37 @@
 #include <QImageReader>
 #include <QMessageBox>
 #include <QColorSpace>
+#include <QTimer>
 
-#include <pxsort/Image.h>
-#include <pxsort/segmentation/Grid.h>
-#include <pxsort/Segment.h>
-#include <pxsort/effect/BubbleSort.h>
-#include <pxsort/Comparator.h>
-#include <pxsort/Mixer.h>
+#include "Image.h"
+#include "segmentation/Grid.h"
+#include "Segment.h"
+#include "effect/BubbleSort.h"
+#include "effect/Heapify.h"
+#include "Comparator.h"
+#include "Mixer.h"
 
-using namespace ps;
+using namespace pxsort;
+
+/**
+ * Framerate in frames-per-second.
+ */
+#define MAX_FRAMERATE 24.0
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow),
-    scrollArea(new QScrollArea)
+    : QMainWindow(parent),
+      ui(new Ui::MainWindow),
+      frameTimer(new QTimer(this))
 {
     ui->setupUi(this);
-    imageLabel = ui->imageLabel;
+    
+    ui->imageLabel->setBackgroundRole(QPalette::Base);
+    ui->imageLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+    ui->imageLabel->setScaledContents(true);
 
-    imageLabel->setBackgroundRole(QPalette::Base);
-    imageLabel->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-    imageLabel->setScaledContents(true);
-
-    scrollArea->setBackgroundRole(QPalette::Dark);
-    scrollArea->setWidget(imageLabel);
-    scrollArea->setVisible(false);
-    setCentralWidget(scrollArea);
+    int interval = (1.0 / ((double) MAX_FRAMERATE)) * 1000.0;
+    frameTimer->setInterval(interval);
+    connect(frameTimer, SIGNAL(timeout()), this, SLOT(stepImageAndDraw()));
 }
 
 MainWindow::~MainWindow()
@@ -40,67 +45,68 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::open() {
-    QString fileName = QFileDialog::getOpenFileName(this);
+    fileName = QFileDialog::getOpenFileName(this);
     if (!fileName.isEmpty())
         loadFile(fileName);
 }
 
 
-bool MainWindow::loadFile(const QString& fileName)
+bool MainWindow::loadFile(const QString& imageFileName)
 {
-    std::cout << fileName.toStdString() << std::endl;
-    QImageReader reader(fileName);
+    std::cout << imageFileName.toStdString() << std::endl;
+    QImageReader reader(imageFileName);
     reader.setAutoTransform(true);
     const QImage newImage = reader.read();
     if (newImage.isNull()) {
         QMessageBox::information(this, QGuiApplication::applicationDisplayName(),
                                  tr("Cannot load %1: %2")
-                                         .arg(QDir::toNativeSeparators(fileName), reader.errorString()));
+                                         .arg(QDir::toNativeSeparators(imageFileName), reader.errorString()));
         return false;
     }
 
     setImage(newImage);
 
-    setWindowFilePath(fileName);
+    setWindowFilePath(imageFileName);
 
     const QString message = tr("Opened \"%1\", %2x%3")
-            .arg(QDir::toNativeSeparators(fileName)).arg(image->width).arg(image->height);
+            .arg(QDir::toNativeSeparators(imageFileName)).arg(image->width).arg(image->height);
     statusBar()->showMessage(message);
     return true;
 }
 
 void MainWindow::setImage(const QImage &newImage)
 {
-    int view_h = imageLabel->height();
-    int view_w = imageLabel->width();
+    int view_h = ui->imageLabel->height();
+    int view_w = ui->imageLabel->width();
 
     QImage scaledImage = newImage.scaled(view_w, view_h, Qt::AspectRatioMode::KeepAspectRatio);
     int img_h = scaledImage.height();
     int img_w = scaledImage.width();
 
-    Image::ColorSpace colorSpace = ps::Image::RGB;
-    std::unique_ptr<uint8_t[]> data(scaledImage.bits());
-    image = std::make_shared<Image>(img_w, img_h, colorSpace, std::move(data));
+    Image::ColorSpace colorSpace = pxsort::Image::XYZ;
+    uint8_t * data = scaledImage.bits();
+    image = std::make_shared<Image>(img_w, img_h, colorSpace, data);
 
     initSegmentation();
 
     drawImage();
-    scrollArea->setVisible(true);
-    imageLabel->adjustSize();
+    ui->imageLabel->setVisible(true);
+    ui->imageLabel->adjustSize();
+    frameTimer->start();
 }
 
 void MainWindow::drawImage() {
-    auto data = image->to_rgb32();
-    QImage qImage(data.get(), image->width, image->height, QImage::Format_RGB32);
-    imageLabel->setPixmap(QPixmap::fromImage(qImage));
+    frameData = image->toRGB32();
+    QImage qImage(frameData.get(), image->width, image->height, QImage::Format_RGB32);
+    ui->imageLabel->setPixmap(QPixmap::fromImage(qImage));
 }
 
 void MainWindow::initSegmentation() {
     if (image == nullptr)
         return;
 
-    int rows = 30;
-    int columns = 40;
+    int rows = 6;
+    int columns = 8;
     int x0 = 0;
     int y0 = 0;
 
@@ -114,11 +120,16 @@ void MainWindow::initEffects() {
                      0, 0, 0);
     SegmentTraversal traversal = FORWARD;
     PixelComparator cmp = comparator::compareChannel(
-            ps::comparator::RED,
-            ps::comparator::ASCENDING);
-    PixelMixer mix = mixer::swapper(ps::mixer::RGB);
+            pxsort::comparator::RED,
+            pxsort::comparator::ASCENDING);
+    PixelMixer mix = mixer::swapper(pxsort::mixer::R);
 
     std::unique_ptr<Effect> e =
-            std::make_unique<BubbleSort>(skew, traversal, cmp, mix);
+            std::make_unique<PartialBubbleSort>(skew, traversal, cmp, mix);
     segmentation->addEffect(std::move(e));
+}
+
+void MainWindow::stepImageAndDraw() {
+    segmentation->applyEffects();
+    drawImage();
 }

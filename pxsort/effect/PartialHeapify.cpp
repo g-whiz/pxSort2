@@ -1,10 +1,10 @@
 #include <utility>
-#include "Heapify.h"
+#include "PartialHeapify.h"
 #include "Segment.h"
 
-using namespace ps;
+using namespace pxsort;
 
-void Heapify::attach(Segment &tile) {
+void PartialHeapify::attach(Segment &tile) {
     this->idx_start = (tile.size() / 2) - 1;
     // edge case for single-pixel segments
     if (tile.size() == 1)
@@ -13,7 +13,7 @@ void Heapify::attach(Segment &tile) {
     this->idx = idx_start;
 }
 
-void Heapify::apply(Segment &tile) {
+void PartialHeapify::apply(Segment &tile) {
     int i = this->idx;
     int left, right;
 
@@ -21,20 +21,20 @@ void Heapify::apply(Segment &tile) {
     // Note: the outer if statements in the loop are just bounds checks
     //       (i.e. "Is there a left/right child?").
     do {
-        left = Heapify::left_child(i);
-        right = Heapify::right_child(i);
+        left = PartialHeapify::left_child(i);
+        right = PartialHeapify::right_child(i);
 
         if (left < tile.size()) {
             if (auto result = this->compareAndMix(tile, i, left)) {
                 i = result.value();
-                continue; // swapper occurred, keep bubbling
+                continue; // swap occurred, keep bubbling
             }
         }
 
         if (right < tile.size()) {
             if (auto result = this->compareAndMix(tile, i, right)) {
                 i = result.value();
-                continue; // swapper occurred, keep bubbling
+                continue; // swap occurred, keep bubbling
             }
         }
 
@@ -50,7 +50,7 @@ void Heapify::apply(Segment &tile) {
         this->idx = this->idx_start;
 }
 
-Heapify::Heapify(const ChannelSkew &skew,
+PartialHeapify::PartialHeapify(const ChannelSkew &skew,
                  const SegmentTraversal traversal,
                  PixelComparator cmp,
                  PixelMixer mix)
@@ -61,7 +61,7 @@ Heapify::Heapify(const ChannelSkew &skew,
           idx(0) {}
 
 
-std::optional<int> Heapify::compareAndMix(Segment &tile,
+std::optional<int> PartialHeapify::compareAndMix(Segment &tile,
                                                 int i_parent,
                                                 int i_child) {
     Pixel parent = tile.getPixel(i_parent, this->traversal, NO_SKEW());
@@ -81,6 +81,6 @@ std::optional<int> Heapify::compareAndMix(Segment &tile,
     return {};
 }
 
-std::unique_ptr<Effect> Heapify::clone() {
-    return std::make_unique<Heapify>(skew, traversal, cmp, mix);
+std::unique_ptr<Effect> PartialHeapify::clone() {
+    return std::make_unique<PartialHeapify>(skew, traversal, cmp, mix);
 }

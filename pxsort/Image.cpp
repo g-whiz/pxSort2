@@ -1,6 +1,6 @@
 #include "Image.h"
 
-using namespace ps;
+using namespace pxsort;
 using namespace cv;
 
 Image::ColorSpace validate(Image::ColorSpace colorSpace) {
@@ -14,25 +14,7 @@ Image::Image(int width,
              int height,
              ColorSpace colorSpace,
              std::unique_ptr<uint8_t[]> data)
-             : width(width),
-             height(height),
-             colorSpace(validate(colorSpace)) {
-    // Create header for pixel data, then convert to floating point.
-    Mat rawPixels(height, width, CV_8UC4, data.get());
-    Mat floatPixels;
-    rawPixels.convertTo(floatPixels, CV_32FC4);
-    floatPixels *= 1.0 / 255.0;
-
-    // Drop alpha channel, then convert color spaces as needed.
-    this->pixels = Mat(height, width, CV_32FC3);
-    cvtColor(floatPixels, this->pixels, COLOR_BGRA2RGB);
-    if (colorSpace != RGB) {
-        auto code = Image::fromRGB[colorSpace - 1];
-        cvtColor(this->pixels, this->pixels, code);
-    }
-
-    normalizePixels();
-}
+             : Image(width, height, colorSpace, data.get()) {}
 
 void Image::normalizePixels() {
     Matx34f T;
@@ -131,7 +113,7 @@ void Image::denormalizePixels() {
     transform(this->pixels, this->pixels, T);
 }
 
-std::unique_ptr<uint8_t[]> Image::to_rgb32() {
+std::unique_ptr<uint8_t[]> Image::toRGB32() {
     // map pixels to original color space
     denormalizePixels();
 
@@ -159,3 +141,29 @@ std::unique_ptr<uint8_t[]> Image::to_rgb32() {
 
     return out_buf;
 }
+
+Image::Image(int width,
+             int height,
+             Image::ColorSpace colorSpace,
+             uint8_t *data)
+        : width(width),
+          height(height),
+          colorSpace(validate(colorSpace))
+{
+    // Create header for pixel data, then convert to floating point.
+    Mat rawPixels(height, width, CV_8UC4, data);
+    Mat floatPixels;
+    rawPixels.convertTo(floatPixels, CV_32FC4);
+    floatPixels *= 1.0 / 255.0;
+
+    // Drop alpha channel, then convert color spaces as needed.
+    this->pixels = Mat(height, width, CV_32FC3);
+    cvtColor(floatPixels, this->pixels, COLOR_BGRA2RGB);
+    if (colorSpace != RGB) {
+        auto code = Image::fromRGB[colorSpace - 1];
+        cvtColor(this->pixels, this->pixels, code);
+    }
+
+    normalizePixels();
+}
+

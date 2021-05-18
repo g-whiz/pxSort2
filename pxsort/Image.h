@@ -5,7 +5,7 @@
 #include <memory>
 #include <opencv2/imgproc.hpp>
 
-class ps::Image {
+class pxsort::Image {
 public:
     /** Color spaces supported by the Image class. */
     enum ColorSpace {
@@ -45,12 +45,25 @@ public:
           std::unique_ptr<uint8_t[]> data);
 
     /**
+     * Construct a new Image using image data in the RGB32 (i.e. 0xffRRGGBB)
+     *   format. Alpha channel data is unused if present.
+     * @param width The width of the image (in pixels).
+     * @param height The height of the image (in pixels).
+     * @param colorSpace The color space to use for this image's pixels.
+     * @param data Pointer to RGB32 pixel data of the input image.
+     */
+    Image(int width,
+          int height,
+          ColorSpace colorSpace,
+          uint8_t *data);
+
+    /**
      * Returns a pointer to a copier of the data in this image, transformed
      *   to the RGB32 (i.e. 0xffRRGGBB) format. The width and height of the
      *   image in the returned data are the width and height of this Image.
      * @return
      */
-    std::unique_ptr<uint8_t[]> to_rgb32();
+    std::unique_ptr<uint8_t[]> toRGB32();
 
 private:
     /** Map pixels from their normal color space to the unit cube. */

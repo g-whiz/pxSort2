@@ -1,7 +1,7 @@
 #ifndef PXSORT2_SEGMENT_H
 #define PXSORT2_SEGMENT_H
 
-#include <pxsort/common.h>
+#include "common.h"
 #include "Effect.h"
 
 /**
@@ -16,7 +16,7 @@
  *   forwardSetPixel methods, which provide the virtual array semantics
  *   used by Effects.
  */
-class ps::Segment {
+class pxsort::Segment {
 public:
 
     /** Returns the number of pixels in this Segment. */
@@ -81,12 +81,6 @@ protected:
                                  ChannelSkew &skew,
                                  const Pixel &px) = 0;
 
-    explicit Segment(std::shared_ptr<Image> img);
-
-    /**
-     * Pointer to the underlying Image data for this segment.
-     */
-    std::shared_ptr<Image> img;
 
 private:
     int getForwardIndex(int idx, SegmentTraversal t);

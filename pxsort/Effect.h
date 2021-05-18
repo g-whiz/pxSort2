@@ -1,7 +1,7 @@
 #ifndef PXSORT2_EFFECT_H
 #define PXSORT2_EFFECT_H
 
-#include <pxsort/common.h>
+#include "common.h"
 
 /**
  * Base interface for effects. An Effect is associated with a specific Segment.
@@ -14,7 +14,7 @@
  * In practice, apply should never be called explicitly by the library user.
  * Instead, it is called by a Segment through a double-dispatch mechanism.
  */
-class ps::Effect {
+class pxsort::Effect {
 public:
     /**
      * Associates this effect with the given Segment. This method should be

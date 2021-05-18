@@ -1,6 +1,6 @@
 #include "Comparator.h"
 
-using namespace ps;
+using namespace pxsort;
 
 PixelComparator comparator::compareChannel(comparator::Channel ch,
                                            comparator::Order order) {

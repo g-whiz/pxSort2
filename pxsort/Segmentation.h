@@ -1,13 +1,13 @@
 #ifndef PXSORT2_SEGMENTATION_H
 #define PXSORT2_SEGMENTATION_H
 
-#include <pxsort/common.h>
+#include "common.h"
 
 
 /**
  * A segmentation of an Image.
  */
-class ps::Segmentation {
+class pxsort::Segmentation {
 public:
     Segmentation();
 

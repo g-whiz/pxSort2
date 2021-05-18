@@ -1,9 +1,9 @@
 #ifndef PXSORT2_COMPARATOR_H
 #define PXSORT2_COMPARATOR_H
 
-#include <pxsort/common.h>
+#include "common.h"
 
-namespace ps::comparator {
+namespace pxsort::comparator {
 
     enum Channel {
         RED,    // compare the first channel from each pixel

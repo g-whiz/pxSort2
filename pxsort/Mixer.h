@@ -1,9 +1,9 @@
 #ifndef PXSORT2_MIXER_H
 #define PXSORT2_MIXER_H
 
-#include <pxsort/common.h>
+#include "common.h"
 
-namespace ps::mixer {
+namespace pxsort::mixer {
     /**
      * Create a PixelMixer that applies the given linear transformation
      * to the input pixels. The two, 3-channel input pixels are concatenated
