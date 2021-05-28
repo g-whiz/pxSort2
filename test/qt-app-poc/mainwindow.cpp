@@ -11,8 +11,8 @@
 #include "Image.h"
 #include "segmentation/Grid.h"
 #include "Segment.h"
-#include "effect/BubbleSort.h"
-#include "effect/Heapify.h"
+#include "effect/PartialBubbleSort.h"
+#include "effect/PartialHeapify.h"
 #include "Comparator.h"
 #include "Mixer.h"
 
@@ -83,7 +83,7 @@ void MainWindow::setImage(const QImage &newImage)
     int img_h = scaledImage.height();
     int img_w = scaledImage.width();
 
-    Image::ColorSpace colorSpace = pxsort::Image::XYZ;
+    Image::ColorSpace colorSpace = pxsort::Image::HSV;
     uint8_t * data = scaledImage.bits();
     image = std::make_shared<Image>(img_w, img_h, colorSpace, data);
 
@@ -105,8 +105,8 @@ void MainWindow::initSegmentation() {
     if (image == nullptr)
         return;
 
-    int rows = 6;
-    int columns = 8;
+    int rows = 30;
+    int columns = 40;
     int x0 = 0;
     int y0 = 0;
 
@@ -116,13 +116,13 @@ void MainWindow::initSegmentation() {
 }
 
 void MainWindow::initEffects() {
-    ChannelSkew skew(0, 0, 0,
-                     0, 0, 0);
+    ChannelSkew skew(0, -4, 1,
+                     0, 6, -1);
     SegmentTraversal traversal = FORWARD;
-    PixelComparator cmp = comparator::compareChannel(
-            pxsort::comparator::RED,
+    PixelComparator cmp = comparator::channel(
+            pxsort::comparator::GREEN,
             pxsort::comparator::ASCENDING);
-    PixelMixer mix = mixer::swapper(pxsort::mixer::R);
+    PixelMixer mix = mixer::swapper(pxsort::mixer::RB);
 
     std::unique_ptr<Effect> e =
             std::make_unique<PartialBubbleSort>(skew, traversal, cmp, mix);

@@ -11,6 +11,9 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_subdirectory(pxsort)
+add_subdirectory(extern/pybind11)
+
+add_subdirectory(src)
 add_subdirectory(test/qt-app-poc)
 add_subdirectory(python)
+add_subdirectory(cython)

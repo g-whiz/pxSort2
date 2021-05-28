@@ -1,0 +1,8 @@
+[submodule "extern/pybind11"]
+	path = extern/pybind11
+	url = git@github.com:pybind/pybind11.git
+	branch = stable
+[submodule "extern/scikit-build"]
+	path = extern/scikit-build
+	url = git@github.com:scikit-build/scikit-build.git
+	branch = master

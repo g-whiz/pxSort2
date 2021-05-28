@@ -1,12 +1,9 @@
-#include <boost/python/module.hpp>
-#include <boost/python/enum.hpp>
-#include <boost/python/exception_translator.hpp>
-#include <boost/python/numpy/ndarray.hpp>
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 
 #include "Image.h"
 
-using namespace boost::python;
-namespace np = boost::python::numpy;
+namespace py = pybind11;
 
 using namespace pxsort;
 
@@ -25,67 +22,61 @@ public:
     what() const _GLIBCXX_TXN_SAFE_DYN _GLIBCXX_NOTHROW override {
         switch (type) {
             case BAD_NDIMS:
-                return "Incorrect shape: the given ndarray must have "
-                       "exactly 3 dimensions.";
+                return "Incorrect shape: the given buffer must have "
+                       "exactly 3 dimensions, with shape (height, width, 4).";
             case BAD_NCHANNELS:
-                return "Incorrect number of channels: the given ndarray must "
+                return "Incorrect number of channels: the given buffer must "
                        "have exactly 4 channels, corresponding to the RGB32 "
                        "color model.";
             case BAD_DATA_TYPE:
-                return "Incorrect dtype: the given ndarray must have a dtype "
-                       "of 'uint8_t', corresponding to the RGB32 color model.";
+                return "Incorrect data type: the given buffer must consist of "
+                       "8-bit integers, corresponding to the RGB32 color model.";
             default:
                 return "Unknown error: Invalid ExceptionType received.";
         }
     }
 };
 
-/* Error translator to print DataFormatException messages thrown by makeImage.
- */
-static void translate(DataFormatException const& e) {
-    PyErr_SetString(PyExc_RuntimeError, e.what());
-}
-
 /* Wrapper to construct an Image from a RGB32 numpy ndarray */
-static boost::shared_ptr<Image> makeImage(np::ndarray &data,
-                                          Image::ColorSpace cs)
+static std::shared_ptr<Image> makeImage(py::buffer &data,
+                                        Image::ColorSpace cs)
 {
-    if (data.get_nd() != 3) {
+    py::buffer_info info = data.request();
+    if (info.ndim != 3) {
         throw DataFormatException(BAD_NDIMS);
     }
-    if (data.get_dtype() != np::dtype::get_builtin<uint8_t>()) {
+    if (info.itemsize != 1) {
         throw DataFormatException(BAD_DATA_TYPE);
     }
-    if (data.shape(2) != 4) {
+    if (info.shape[2] != 4) {
         throw DataFormatException(BAD_NCHANNELS);
     }
 
-    int w = data.shape(1);
-    int h = data.shape(0);
-    auto *data_ptr = (uint8_t *) data.get_data();
-    return boost::shared_ptr<Image>(new Image(w, h, cs, data_ptr));
+    int w = info.shape[1];
+    int h = info.shape[0];
+    auto data_ptr = (uint8_t *) info.ptr;
+    return std::make_shared<Image>(w, h, cs, data_ptr);
 }
 
 /* Returns a copy of an Image's stored data as an ndarray. */
-np::ndarray getData(Image *thisImage){
+py::array getData(const std::shared_ptr<Image>& thisImage){
     std::unique_ptr<uint8_t[]> data = thisImage->toRGB32();
     int h = thisImage->height;
     int w = thisImage->width;
 
-    np::dtype dt = np::dtype::get_builtin<uint8_t>();
-    tuple shape = make_tuple(h, w, 4);
-    tuple strides = make_tuple(w * 4, 4, 1);
+    py::dtype dt(py::format_descriptor<uint8_t>::format());
+    py::array::ShapeContainer shape({h, w, 4});
+    py::array::StridesContainer strides({w * 4, 4, 1});
 
-    return np::from_data(data.release(), dt, shape, strides, object());
+    return py::array(dt, shape, strides, data.release());
 }
 
 
-BOOST_PYTHON_MODULE(image)
-{
-    register_exception_translator<DataFormatException>(&translate);
+void init_image(py::module_ &m) {
+    py::register_exception<DataFormatException>(m, "DataFormatException");
 
-    enum_<Image::ColorSpace>("ColorSpace",
-                             "Color spaces supported by the Image class.")
+    py::enum_<Image::ColorSpace>(m, "ColorSpace",
+                                 "Color spaces supported by the Image class.")
             .value("RGB", Image::RGB)
             .value("XYZ", Image::XYZ)
             .value("Lab", Image::Lab)
@@ -95,8 +86,8 @@ BOOST_PYTHON_MODULE(image)
             .value("HLS", Image::HLS)
             .export_values();
 
-    class_<Image>("Image", "An Image.", no_init)
-            .def("__init__", make_constructor(&makeImage))
+    py::class_<Image, std::shared_ptr<Image>>(m, "Image", "An Image.")
+            .def(py::init(&makeImage))
             .def("to_array", &getData,
                  "Returns a numpy array containing a copy of this Image's data "
                  "in the RGB32 color format.")
