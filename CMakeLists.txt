@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.16)
 
 project(pxsort2 LANGUAGES CXX)
 
@@ -15,5 +15,4 @@ add_subdirectory(extern/pybind11)
 
 add_subdirectory(src)
 add_subdirectory(test/qt-app-poc)
-add_subdirectory(python)
-add_subdirectory(cython)
+add_subdirectory(python_bindings)

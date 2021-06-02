@@ -12,9 +12,20 @@ public:
     Segmentation();
 
     /**
+     * Returns a new Segmentation containing the given segments.
+     * Note: the given segments must be disjoint (i.e. they must not overlap
+     *   in pixels at all), overlapping segments may result in undefined
+     *   behaviour when applying effects.
+     * @param segments
+     * @return
+     */
+    static std::shared_ptr<Segmentation>
+    fromSegments(std::vector<std::shared_ptr<Segment>> segments);
+
+    /**
      * Returns the number of Segments in this Segmentation.
      */
-    virtual int size() = 0;
+    size_t size();
 
     /**
      * Attaches the given effect to all Segments in this Segmentation.
@@ -43,7 +54,6 @@ public:
      */
     std::shared_ptr<Segment> getSegment(int i);
 
-protected:
     /** The Segments in this Segmentation. */
     std::vector<std::shared_ptr<Segment>> segments;
 };

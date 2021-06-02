@@ -25,7 +25,6 @@ private:
     PixelProjection project;
     PixelMixer mix;
     const int nBuckets;
-    std::vector<cv::Vec2d> bucketRanges;
 
     int bucket(const Pixel &px);
 

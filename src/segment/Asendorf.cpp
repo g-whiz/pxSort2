@@ -9,11 +9,11 @@ int Asendorf::size() {
 }
 
 Pixel Asendorf::forwardGetPixel(int idx, ChannelSkew &skew) {
-    return child->getPixel(idx - loIdx, FORWARD, skew);
+    return child->getPixel(idx + loIdx, FORWARD, skew);
 }
 
 void Asendorf::forwardSetPixel(int idx, ChannelSkew &skew, const Pixel &px) {
-    child->setPixel(idx, FORWARD, skew, px);
+    child->setPixel(idx + loIdx, FORWARD, skew, px);
 }
 
 int Asendorf::computeLoIdx(Segment &segment,

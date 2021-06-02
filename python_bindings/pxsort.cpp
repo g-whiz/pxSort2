@@ -12,7 +12,7 @@ void init_comparator(py::module_ &m);
 void init_projection(py::module_ &m);
 void init_predicate(py::module_ &m);
 
-PYBIND11_MODULE(_pxsort, m) {
+PYBIND11_MODULE(pxsort, m) {
     init_core(m);
     init_image(m);
     init_effect(m);

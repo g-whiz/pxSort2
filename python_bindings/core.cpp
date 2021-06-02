@@ -23,6 +23,12 @@ void setSkewVal(const std::shared_ptr<ChannelSkew> &skew,
 
 void init_core(py::module_ &m) {
 
+    py::enum_<Channel>
+            (m, "Channel")
+            .value("R", R)
+            .value("G", G)
+            .value("B", B);
+
     py::class_<ChannelSkew, std::shared_ptr<ChannelSkew>>
         (m, "ChannelSkew")
         .def(py::init<int, int, int, int, int, int>())

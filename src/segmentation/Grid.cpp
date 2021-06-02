@@ -17,9 +17,6 @@ Grid::Grid(const std::shared_ptr<Image>& img,
     initTiles(img);
 }
 
-int Grid::size() {
-    return rows * columns;
-}
 
 Grid::TileSpec Grid::tileSpec(int idx) {
     int row = idx / columns;
@@ -45,7 +42,7 @@ Grid::TileSpec Grid::tileSpec(int idx) {
 }
 
 void Grid::initTiles(const std::shared_ptr<Image>& img) {
-    for (int idx = 0; idx < size(); idx++){
+    for (int idx = 0; idx < rows * columns; idx++){
         auto[tile_width, tile_height, tile_x0, tile_y0] = tileSpec(idx);
 
         std::unique_ptr<Segment> tile = std::make_unique<Rectangle>(

@@ -1,4 +1,5 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 #include "Image.h"
 #include "Effect.h"
@@ -20,13 +21,22 @@ void pyApplyEffects(const std::shared_ptr<Segmentation>& s) {
 }
 
 
-void init_segmentation(py::module &m) {
+py::iterator pyIter(const std::shared_ptr<Segmentation>& s) {
+    return py::make_iterator(s->segments.begin(), s->segments.end());
+}
+
+
+void init_segmentation(py::module_ &base) {
+    auto m = base.def_submodule("segmentation");
 
     py::class_<Segmentation, std::shared_ptr<Segmentation>>
             (m, "Segmentation")
+            .def(py::init(&Segmentation::fromSegments))
             .def("__len__", &Segmentation::size,
                  "Return the number of segments in this segmentation.")
-            .def("get_segment", &Segmentation::getSegment)
+            .def("__getitem__", &Segmentation::getSegment)
+            // keep segmentation alive while iterator exists
+            .def("__iter__", &pyIter, py::keep_alive<0, 1>())
             .def("add_effect", py::overload_cast<std::shared_ptr<Effect>>(
                                    &Segmentation::addEffect),
                  "Add an effect to all segments in this Segmentation.")

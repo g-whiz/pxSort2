@@ -20,8 +20,6 @@ public:
                int x0,
                int y0);
 
-    int size() override;
-
 private:
     const int rows;
     const int columns;

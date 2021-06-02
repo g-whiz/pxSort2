@@ -4,13 +4,20 @@
 #include "Segment.h"
 #include "segment/Asendorf.h"
 #include "segment/Rectangle.h"
+#include "wrapper.h"
 
 namespace py = pybind11;
 using namespace pxsort;
 
-PYBIND11_MAKE_OPAQUE(PixelPredicate);
+std::shared_ptr<Asendorf> makeAsendorf(const std::shared_ptr<Segment>& segment,
+                                       PixelPredicateWrapper &lo,
+                                       PixelPredicateWrapper &hi) {
+    return std::make_shared<Asendorf>(segment, lo.predicate, hi.predicate);
+}
 
-void init_segment(py::module_ &m) {
+void init_segment(py::module_ &base) {
+    auto m = base.def_submodule("segment");
+
     py::enum_<SegmentTraversal>(m, "SegmentTraversal",
                             "Traversal options for a Segment's pixels.")
             .value("Forward", FORWARD)
@@ -50,44 +57,5 @@ void init_segment(py::module_ &m) {
             "   - then A.size() = max { 0, i_hi - i_lo + 1}\n"
             "   - if A.size() > 0, then A[i] = S[i + i_lo], for 0 <= i < "
             "A.size()")
-            .def(py::init<std::shared_ptr<Segment>,
-                          PixelPredicate,
-                          PixelPredicate>());
+            .def(py::init(&makeAsendorf));
 }
-
-//class PySegment : public Segment {
-//public:
-//    using Segment::Segment;
-//    int size() override {
-//        PYBIND11_OVERRIDE_PURE(int, Segment, size);
-//    }
-//
-//    Pixel forwardGetPixel(int idx, ChannelSkew &skew) override {
-//        PYBIND11_OVERRIDE_PURE(Pixel, Segment, forwardGetPixel, idx, skew);
-//    }
-//
-//    void forwardSetPixel(int idx, ChannelSkew &skew, const Pixel &px) override {
-//        PYBIND11_OVERRIDE_PURE(void, Segment, forwardSetPixel, idx, skew, px);
-//    }
-//};
-//
-//void pyAttachEffect(const std::shared_ptr<Segment>& s,
-//                    const std::shared_ptr<Effect>& e) {
-//    auto clone = e->clone();
-//    s->attachEffect(std::move(clone));
-//}
-
-//    py::class_<Segment, PySegment>
-//            (m, "Segment",
-//            "Interface for accessing a segment of an image.\n\n"
-//            "The primary purpose of the Segment interface is to provide "
-//            "Effects with a 1-dimensional array-like view of some subset of an "
-//            "image's pixels. In this sense, a Segment maps an arbitrary subset "
-//            "of an Image's pixels to a virtual array.")
-//            .def(py::init<>())
-//            .def("size", &Segment::size)
-//            .def("_forward_get_pixel", &Segment::forwardGetPixel)
-//            .def("_forward_set_pixel", &Segment::forwardSetPixel)
-//            .def("get_pixel", &Segment::getPixel)
-//            .def("set_pixel", &Segment::setPixel)
-//            .def("attach_effect", &pyAttachEffect);

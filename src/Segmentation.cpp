@@ -1,4 +1,6 @@
 #include "Segmentation.h"
+
+#include <utility>
 #include "Segment.h"
 #include "Effect.h"
 
@@ -38,4 +40,15 @@ Segmentation::Segmentation()
 
 std::shared_ptr<Segment> Segmentation::getSegment(int i) {
     return segments.at(i);
+}
+
+size_t Segmentation::size() {
+    return segments.size();
+}
+
+std::shared_ptr<Segmentation>
+Segmentation::fromSegments(std::vector<std::shared_ptr<Segment>> segments) {
+    auto s = std::make_shared<Segmentation>();
+    s->segments = std::move(segments);
+    return s;
 }

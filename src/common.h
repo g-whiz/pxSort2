@@ -111,6 +111,19 @@ namespace pxsort {
         G = 1,
         B = 2
     };
+
+    /**
+     * Constrain the
+     * @tparam T Any type that supports the > and < operators.
+     * @param x
+     * @param lo
+     * @param hi
+     * @return
+     */
+    template<typename T>
+    inline T clamp(T x, T lo, T hi) {
+        return MIN(hi, MAX(lo, x));
+    }
 }
 
 #endif //PXSORT2_COMMON_H

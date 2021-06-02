@@ -2,3 +2,6 @@
 	path = extern/pybind11
 	url = git@github.com:pybind/pybind11.git
 	branch = stable
+[submodule "extern/computecpp-sdk"]
+	path = extern/computecpp-sdk
+	url = git@github.com:codeplaysoftware/computecpp-sdk.git

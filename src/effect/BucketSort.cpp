@@ -26,7 +26,7 @@ void BucketSort::applyToSegment(Segment &segment) {
     for (int i = 0; i < segment.size(); i++) {
         Pixel px = segment.getPixel(i, traversal, skew);
         int b = bucket(px);
-        int index = indices[b];
+        int index = indices.at(b);
 
         sorted[index] = px;
         indices[b]++;
@@ -74,25 +74,14 @@ BucketSort::BucketSort(const ChannelSkew &skew,
     : Effect(skew, traversal),
       project(std::move(project)),
       mix(std::move(mix)),
-      nBuckets(nBuckets),
-      bucketRanges(makeBucketRanges(nBuckets)){}
+      nBuckets(nBuckets) {}
 
 /* Determines which bucket a pixel belongs to.
  * Uses a binary search to remain efficient with large numbers of buckets. */
 int BucketSort::bucket(const Pixel &px) {
-    // the image of px under projection 'project'
-    float image = project(px);
+    double step = 1.0 / (double) nBuckets;
+    auto px_proj = clamp<float>(project(px), 0.0, 1.0);
 
-    int h = PS_LOG_2(nBuckets);
-    int b = (1 << h) - 1;
-    while (true) {
-        h--;
-        if (image < bucketRanges[b][0])
-            b = b - (1 << h);
-        else if (image > bucketRanges[b][1])
-            b = b + (1 << h);
-        else break;
-    }
-
+    int b = clamp<int>(int (px_proj / step), 0, nBuckets - 1);
     return b;
 }

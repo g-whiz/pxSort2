@@ -120,7 +120,7 @@ void MainWindow::initEffects() {
                      0, 6, -1);
     SegmentTraversal traversal = FORWARD;
     PixelComparator cmp = comparator::channel(
-            pxsort::comparator::GREEN,
+            pxsort::G,
             pxsort::comparator::ASCENDING);
     PixelMixer mix = mixer::swapper(pxsort::mixer::RB);
 

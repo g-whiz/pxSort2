@@ -28,6 +28,20 @@ PixelMixer pyLinearMixer(const py::array_t<float>& tArray) {
 }
 
 void init_mixer(py::module_ &m) {
+    py::class_<PixelMixer>
+            (m, "PixelMixer")
+        .def_static("linear", &pyLinearMixer,
+        "Returns a PixelMixer that applies the linear transformation defined "
+        "by the given 6x6 matrix to input pixels. The two 3-channel input "
+        "pixels are concatenated. And the transformation is applied to the "
+        "resulting 6-dimensional vector.")
+        .def_static("swapper", &mixer::swapper,
+        "Returns a PixelMixer that swaps the channels specified by the given "
+        "Swap.")
+        .def_static("copier", &mixer::copier,
+        "Returns a PixelMixer that copies channels from the input pixels to "
+        "the output pixels as specified.");
+
     py::enum_<mixer::Swap>
             (m, "Swap")
             .value("R", mixer::R, "Swap the red channels.")
@@ -52,19 +66,5 @@ void init_mixer(py::module_ &m) {
                    "The green channel of the second input pixel.")
             .value("IN2_B", mixer::IN2_B,
                    "The blue channel of the second input pixel.");
-
-    m.def("mixer_linear", &pyLinearMixer,
-          "Returns a PixelMixer that applies the linear transformation defined "
-          "by the given 6x6 matrix to input pixels. The two 3-channel input "
-          "pixels are concatenated. And the transformation is applied to the "
-          "resulting 6-dimensional vector.");
-
-    m.def("mixer_swapper", &mixer::swapper,
-          "Returns a PixelMixer that swaps the channels specified by the given "
-          "Swap.");
-
-    m.def("mixer_copier", &mixer::copier,
-          "Returns a PixelMixer that copies channels from the input pixels to "
-          "the output pixels as specified.");
 }
 
