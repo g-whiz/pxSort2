@@ -40,7 +40,7 @@ void BucketSort::applyToSegment(Segment &segment) {
     }
 }
 
-std::unique_ptr<Effect> BucketSort::clone() const {
+std::unique_ptr<Sorter> BucketSort::clone() const {
     return std::make_unique<BucketSort>(skew,
                                         traversal,
                                         project,
@@ -71,7 +71,7 @@ BucketSort::BucketSort(const ChannelSkew &skew,
                        PixelProjection project,
                        PixelMixer mix,
                        int nBuckets)
-    : Effect(skew, traversal),
+    : Sorter(skew, traversal),
       project(std::move(project)),
       mix(std::move(mix)),
       nBuckets(nBuckets) {}

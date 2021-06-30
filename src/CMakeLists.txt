@@ -5,12 +5,12 @@ add_library(pxsort
         common.h
         Image.h
         Image.cpp
-        Effect.cpp
-        Effect.h
-        effect/PartialBubbleSort.h
-        effect/PartialBubbleSort.cpp
-        effect/PartialHeapify.h
-        effect/PartialHeapify.cpp
+        Sorter.cpp
+        Sorter.h
+        sorter/PartialBubbleSort.h
+        sorter/PartialBubbleSort.cpp
+        sorter/PartialHeapify.h
+        sorter/PartialHeapify.cpp
         Segment.cpp
         Segment.h
         Segmentation.h
@@ -25,8 +25,8 @@ add_library(pxsort
         Comparator.cpp
         segment/Asendorf.cpp
         segment/Asendorf.h
-        effect/BucketSort.cpp
-        effect/BucketSort.h
+        sorter/BucketSort.cpp
+        sorter/BucketSort.h
         Projection.h
         Predicate.h Predicate.cpp Projection.cpp)
 

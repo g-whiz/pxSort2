@@ -1,4 +1,4 @@
-#include "Effect.h"
+#include "Sorter.h"
 #include "Segment.h"
 
 using namespace pxsort;
@@ -46,7 +46,7 @@ int Segment::btbfToForwardIdx(int idx) {
     return forwardIdx;
 }
 
-void Segment::addEffect(std::shared_ptr<Effect> e) {
+void Segment::addEffect(std::shared_ptr<Sorter> e) {
     e->attachToSegment(*this);
     this->effects.push_back(std::move(e));
 }
@@ -57,6 +57,6 @@ void Segment::applyEffects() {
     }
 }
 
-std::shared_ptr<Effect> Segment::getEffect(int i) {
+std::shared_ptr<Sorter> Segment::getEffect(int i) {
     return effects.at(i);
 }

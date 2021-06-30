@@ -2,18 +2,18 @@
 #define PXSORT2_PARTIALHEAPIFY_H
 
 #include "common.h"
-#include "Effect.h"
+#include "Sorter.h"
 
 /**
- * An Effect that applies a partial pass of the heapify algorithm each time
+ * An Sorter that applies a partial pass of the heapify algorithm each time
  *   apply is called. In particular, applyToSegment performs a pseudo-bubble-down
  *   operation on some element of a binary heap.
  * Since the mix operation doesn't necessarily perform a swapper, this is not
- *   a true bubble down operation. But the effect proceeds as if it were
+ *   a true bubble down operation. But the sorter proceeds as if it were
  *   (i.e. it assumes we are making progress towards restoring the heap
  *   property).
  */
-class pxsort::PartialHeapify : public Effect {
+class pxsort::PartialHeapify : public Sorter {
 public:
     void attachToSegment(Segment &tile) override;
 
@@ -40,7 +40,7 @@ private:
     int idx_start{};
     int idx{};
 
-    [[nodiscard]] std::unique_ptr<Effect> clone() const override;
+    [[nodiscard]] std::unique_ptr<Sorter> clone() const override;
 
     std::optional<int> compareAndMix(Segment &tile,
                                      int i_parent,

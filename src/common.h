@@ -23,7 +23,7 @@ namespace pxsort {
 
     class Image;
 
-    class Effect;
+    class Sorter;
     class PartialBubbleSort;
     class PartialHeapify;
     class BucketSort;

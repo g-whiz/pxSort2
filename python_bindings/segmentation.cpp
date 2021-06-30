@@ -2,7 +2,7 @@
 #include <pybind11/stl.h>
 
 #include "Image.h"
-#include "Effect.h"
+#include "Sorter.h"
 #include "Segment.h"
 #include "Segmentation.h"
 #include "segmentation/Grid.h"
@@ -37,12 +37,12 @@ void init_segmentation(py::module_ &base) {
             .def("__getitem__", &Segmentation::getSegment)
             // keep segmentation alive while iterator exists
             .def("__iter__", &pyIter, py::keep_alive<0, 1>())
-            .def("add_effect", py::overload_cast<std::shared_ptr<Effect>>(
+            .def("add_effect", py::overload_cast<std::shared_ptr<Sorter>>(
                                    &Segmentation::addEffect),
-                 "Add an effect to all segments in this Segmentation.")
-            .def("add_effect", py::overload_cast<std::shared_ptr<Effect>, int>(
+                 "Add an sorter to all segments in this Segmentation.")
+            .def("add_effect", py::overload_cast<std::shared_ptr<Sorter>, int>(
                     &Segmentation::addEffect),
-                 "Add an effect to the ith segment in this Segmentation.")
+                 "Add an sorter to the ith segment in this Segmentation.")
             .def("apply_effects", &pyApplyEffects,
                  "Apply the effects attached to each Segment in this "
                  "Segmentation once.");

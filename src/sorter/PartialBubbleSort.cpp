@@ -28,8 +28,8 @@ PartialBubbleSort::PartialBubbleSort(const ChannelSkew &skew,
                                      const SegmentTraversal traversal,
                                      PixelComparator cmp,
                                      PixelMixer mix)
-        : Effect(skew, traversal), cmp(std::move(cmp)), mix(std::move(mix)) {}
+        : Sorter(skew, traversal), cmp(std::move(cmp)), mix(std::move(mix)) {}
 
-std::unique_ptr<Effect> PartialBubbleSort::clone() const {
+std::unique_ptr<Sorter> PartialBubbleSort::clone() const {
     return std::make_unique<PartialBubbleSort>(skew, traversal, cmp, mix);
 }

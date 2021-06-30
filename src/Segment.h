@@ -2,7 +2,7 @@
 #define PXSORT2_SEGMENT_H
 
 #include "common.h"
-#include "Effect.h"
+#include "Sorter.h"
 
 /**
  * Interface for accessing a segment of an image.
@@ -43,11 +43,11 @@ public:
                   const Pixel &px);
 
     /**
-     * Associates the given Effect with this Segment.
+     * Associates the given Sorter with this Segment.
      *
-     * @param e The effect to addEffect.
+     * @param e The sorter to addEffect.
      */
-    void addEffect(std::shared_ptr<Effect> e);
+    void addEffect(std::shared_ptr<Sorter> e);
 
     /**
      * Returns the total number of effects attached to this segment.
@@ -56,15 +56,15 @@ public:
     inline size_t numEffects() { return effects.size(); }
 
     /**
-     * Returns the ith effect attached to this Segment.
+     * Returns the ith sorter attached to this Segment.
      * @param i An index, with 0 <= i < this->numEffects()
      * @return
      */
-    std::shared_ptr<Effect> getEffect(int i);
+    std::shared_ptr<Sorter> getEffect(int i);
 
     /**
      * Applies all Effects attached to this Segment once.
-     * In particular, for each Effect e associated with this Segment t, this
+     * In particular, for each Sorter e associated with this Segment t, this
      *   function calls e.applyToSegment(t).
      *
      * Note that this function will applyToSegment effects in the order that they
@@ -99,7 +99,7 @@ private:
     int getForwardIndex(int idx, SegmentTraversal t);
     int btbfToForwardIdx(int idx);
 
-    std::vector<std::shared_ptr<Effect>> effects;
+    std::vector<std::shared_ptr<Sorter>> effects;
 };
 
 

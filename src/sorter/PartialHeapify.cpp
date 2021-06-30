@@ -54,7 +54,7 @@ PartialHeapify::PartialHeapify(const ChannelSkew &skew,
                  const SegmentTraversal traversal,
                  PixelComparator cmp,
                  PixelMixer mix)
-        : Effect(skew, traversal),
+        : Sorter(skew, traversal),
           cmp(std::move(cmp)),
           mix(std::move(mix)),
           idx_start(0),
@@ -81,6 +81,6 @@ std::optional<int> PartialHeapify::compareAndMix(Segment &tile,
     return {};
 }
 
-std::unique_ptr<Effect> PartialHeapify::clone() const {
+std::unique_ptr<Sorter> PartialHeapify::clone() const {
     return std::make_unique<PartialHeapify>(skew, traversal, cmp, mix);
 }

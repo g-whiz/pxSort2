@@ -2,11 +2,11 @@
 #define PXSORT2_BUCKETSORT_H
 
 #include "common.h"
-#include "Effect.h"
+#include "Sorter.h"
 
 using namespace pxsort;
 
-class pxsort::BucketSort : public Effect {
+class pxsort::BucketSort : public Sorter {
 public:
     BucketSort(const ChannelSkew &skew,
                SegmentTraversal traversal,
@@ -20,7 +20,7 @@ private:
 
     void applyToSegment(Segment &segment) override;
 
-    [[nodiscard]] std::unique_ptr<Effect> clone() const override;
+    [[nodiscard]] std::unique_ptr<Sorter> clone() const override;
 
     PixelProjection project;
     PixelMixer mix;

@@ -2,7 +2,7 @@
 
 #include <utility>
 #include "Segment.h"
-#include "Effect.h"
+#include "Sorter.h"
 
 /*
  * TODO: After implementing a single-threaded prototype algo, adapt for
@@ -16,14 +16,14 @@
 
 using namespace pxsort;
 
-void Segmentation::addEffect(std::shared_ptr<Effect> e) {
+void Segmentation::addEffect(std::shared_ptr<Sorter> e) {
     for (auto &tile : segments) {
-        std::unique_ptr<Effect> clone = e->clone();
+        std::unique_ptr<Sorter> clone = e->clone();
         tile->addEffect(std::move(clone));
     }
 }
 
-void Segmentation::addEffect(std::shared_ptr<Effect> e, int segment) {
+void Segmentation::addEffect(std::shared_ptr<Sorter> e, int segment) {
     segments[segment]->addEffect(std::move(e));
 }
 

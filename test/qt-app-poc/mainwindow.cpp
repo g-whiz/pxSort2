@@ -124,7 +124,7 @@ void MainWindow::initEffects() {
             pxsort::comparator::ASCENDING);
     PixelMixer mix = mixer::swapper(pxsort::mixer::RB);
 
-    std::unique_ptr<Effect> e =
+    std::unique_ptr<Sorter> e =
             std::make_unique<PartialBubbleSort>(skew, traversal, cmp, mix);
     segmentation->addEffect(std::move(e));
 }

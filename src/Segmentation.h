@@ -28,17 +28,17 @@ public:
     size_t size();
 
     /**
-     * Attaches the given effect to all Segments in this Segmentation.
+     * Attaches the given sorter to all Segments in this Segmentation.
      * @param e
      */
-    void addEffect(std::shared_ptr<Effect> e);
+    void addEffect(std::shared_ptr<Sorter> e);
 
     /**
-     * Attaches the given effect to the specified segment in this Segmentation.
+     * Attaches the given sorter to the specified segment in this Segmentation.
      * @param e
      * @param segment
      */
-    void addEffect(std::shared_ptr<Effect> e, int segment);
+    void addEffect(std::shared_ptr<Sorter> e, int segment);
 
     /**
      * Applies the effects attached to each Segment in this Segmentation once.

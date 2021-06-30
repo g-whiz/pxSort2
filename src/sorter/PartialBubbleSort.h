@@ -2,11 +2,11 @@
 #define PXSORT2_PARTIALBUBBLESORT_H
 
 #include "common.h"
-#include "Effect.h"
+#include "Sorter.h"
 
 using namespace pxsort;
 
-class pxsort::PartialBubbleSort : public Effect {
+class pxsort::PartialBubbleSort : public Sorter {
 public:
     PartialBubbleSort(const ChannelSkew &skew,
                       SegmentTraversal traversal,
@@ -21,7 +21,7 @@ private:
 
     void applyToSegment(Segment &tile) override;
 
-    [[nodiscard]] std::unique_ptr<Effect> clone() const override;
+    [[nodiscard]] std::unique_ptr<Sorter> clone() const override;
 };
 
 #endif //PXSORT2_PARTIALBUBBLESORT_H
