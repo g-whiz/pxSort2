@@ -28,7 +28,11 @@ add_library(pxsort
         sorter/BucketSort.cpp
         sorter/BucketSort.h
         Projection.h
-        Predicate.h Predicate.cpp Projection.cpp)
+        Predicate.h
+        Predicate.cpp
+        Projection.cpp
+        parameterization/Parameterization.h
+        parameterization/Mixer.h parameterization/Mixer.cpp)
 
 set_property(TARGET pxsort PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_include_directories(pxsort PUBLIC ${CMAKE_SOURCE_DIR}/src)

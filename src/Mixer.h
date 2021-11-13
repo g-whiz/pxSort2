@@ -8,19 +8,12 @@ namespace pxsort::mixer {
      * Create a PixelMixer that applies the given linear transformation
      * to the input pixels. The two, 3-channel input pixels are concatenated
      * and treated as a 6-dimensional point for the linear transformation.
+     *
+     * This function normalizes the row-vectors of the given transformation.
      * @param T
      * @return
      */
     PixelMixer linear(const cv::Matx66f &T);
-
-    /**
-     * Create a PixelMixer that applies the given linear transformation
-     * to the input pixels. The two, 3-channel input pixels are concatenated
-     * and treated as a 6-dimensional point for the linear transformation.
-     * @param T
-     * @return
-     */
-    PixelMixer linear(const std::shared_ptr<const cv::Matx66f> &T);
 
     enum Swap {
         R,   // Swap the red channels.

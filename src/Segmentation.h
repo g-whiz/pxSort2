@@ -31,7 +31,7 @@ public:
      * Attaches the given sorter to all Segments in this Segmentation.
      * @param e
      */
-    void addEffect(std::shared_ptr<Sorter> e);
+    void addEffect(const std::shared_ptr<Sorter>& e);
 
     /**
      * Attaches the given sorter to the specified segment in this Segmentation.

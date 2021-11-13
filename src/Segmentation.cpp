@@ -16,7 +16,7 @@
 
 using namespace pxsort;
 
-void Segmentation::addEffect(std::shared_ptr<Sorter> e) {
+void Segmentation::addEffect(const std::shared_ptr<Sorter>& e) {
     for (auto &tile : segments) {
         std::unique_ptr<Sorter> clone = e->clone();
         tile->addEffect(std::move(clone));

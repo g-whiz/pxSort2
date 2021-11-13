@@ -1,6 +1,7 @@
 #ifndef PXSORT2_COMMON_H
 #define PXSORT2_COMMON_H
 
+#include <concepts>
 #include <opencv2/core/types.hpp>
 
 /*
@@ -34,6 +35,8 @@ namespace pxsort {
 
     class Segmentation;
     class Grid;
+
+    class ParameterizedLinearMixer;
 
     /* Library typedefs. */
 
