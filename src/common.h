@@ -36,6 +36,10 @@ namespace pxsort {
     class Segmentation;
     class Grid;
 
+    template<typename T, int D>
+    requires (D > 0)
+    class Parameterization;
+
     class ParameterizedLinearMixer;
 
     /* Library typedefs. */

@@ -18,5 +18,5 @@ add_subdirectory(extern/pybind11)
 
 
 add_subdirectory(src)
-add_subdirectory(test/qt-app-poc)
+# add_subdirectory(test/qt-app-poc)
 add_subdirectory(python_bindings)
