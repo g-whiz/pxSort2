@@ -22,11 +22,11 @@ private:
 
     [[nodiscard]] std::unique_ptr<Sorter> clone() const override;
 
-    PixelProjection project;
-    PixelMixer mix;
+    std::unique_ptr<PixelProjection> project;
+    std::unique_ptr<PixelMixer> mix;
     const int nBuckets;
 
-    int bucket(const Pixel &px);
+    int bucket(const Pixel &);
 
 };
 

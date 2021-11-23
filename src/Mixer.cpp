@@ -1,4 +1,4 @@
-#include "Mixer.h"
+#include "PixelMixer.h"
 #include "opencv2/core.hpp"
 
 using namespace pxsort;

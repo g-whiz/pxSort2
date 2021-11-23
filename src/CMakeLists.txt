@@ -19,7 +19,7 @@ add_library(pxsort
         segment/Rectangle.h
         segmentation/Grid.cpp
         segmentation/Grid.h
-        Mixer.h
+        PixelMixer.h
         Mixer.cpp
         Comparator.h
         Comparator.cpp
@@ -31,8 +31,11 @@ add_library(pxsort
         Predicate.h
         Predicate.cpp
         Projection.cpp
-        parameterization/Parameterization.h
-        parameterization/Mixer.h parameterization/Mixer.cpp)
+        mixer/ChannelCopier.h
+        mixer/ChannelCopier.cpp
+        mixer/LinearMixer.h
+        mixer/LinearMixer.cpp
+        Parameterization.h)
 
 set_property(TARGET pxsort PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_include_directories(pxsort PUBLIC ${CMAKE_SOURCE_DIR}/src)

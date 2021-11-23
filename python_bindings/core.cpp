@@ -25,9 +25,9 @@ void init_core(py::module_ &m) {
 
     py::enum_<Channel>
             (m, "Channel")
-            .value("R", R)
-            .value("G", G)
-            .value("B", B);
+            .value("RED", RED)
+            .value("GREEN", GREEN)
+            .value("BLUE", BLUE);
 
     py::class_<ChannelSkew, std::shared_ptr<ChannelSkew>>
         (m, "ChannelSkew")

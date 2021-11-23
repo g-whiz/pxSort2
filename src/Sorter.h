@@ -16,6 +16,7 @@
  */
 class pxsort::Sorter {
 public:
+    virtual ~Sorter() = default;
     /**
      * Associates this sorter with the given Segment. This method should be
      * called once at initialization.
@@ -24,13 +25,13 @@ public:
      *   sorter using the information about the given Segment (i.e. its size).
      * @param segment
      */
-    virtual void attachToSegment(Segment &segment) = 0;
+    virtual void attachToSegment(Segment&) = 0;
 
     /**
      * Applies this sorter to a Segment
      * @param segment
      */
-    virtual void applyToSegment(Segment &segment) = 0;
+    virtual void applyToSegment(Segment&) = 0;
 
     /**
      * Returns a copier of this sorter.

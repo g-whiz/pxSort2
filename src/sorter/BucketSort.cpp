@@ -1,4 +1,4 @@
-#include "effect/BucketSort.h"
+#include "sorter/BucketSort.h"
 #include "Segment.h"
 
 #include <utility>
@@ -11,8 +11,8 @@ void BucketSort::applyToSegment(Segment &segment) {
     // count pixels in each bucket
     std::vector<int> counts(nBuckets, 0);
     for (int i = 0; i < segment.size(); i++) {
-        int b = bucket(segment.getPixel(i, traversal, skew));
-        counts[b]++;
+        int bkt_idx = bucket(segment.getPixel(i, traversal, skew));
+        counts[bkt_idx]++;
     }
 
     // compute the starting indices of each bucket

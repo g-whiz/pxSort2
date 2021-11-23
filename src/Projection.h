@@ -8,7 +8,7 @@ namespace pxsort::projection {
      * Create a PixelPredicate f that applies the linear transformation:
      *     f(p) = M*p + b
      *   to given pixels and returns the result clamped to [0, 1].
-     * @param M A linear map from [0, 1]^3 to R in matrix form.
+     * @param M A linear map from [0, 1]^3 to RED in matrix form.
      * @param b A bias parameter
      * @return
      */

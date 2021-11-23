@@ -14,7 +14,7 @@
 #include "effect/PartialBubbleSort.h"
 #include "effect/PartialHeapify.h"
 #include "Comparator.h"
-#include "Mixer.h"
+#include "PixelMixer.h"
 
 using namespace pxsort;
 

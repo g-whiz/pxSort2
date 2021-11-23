@@ -1,20 +1,16 @@
-#ifndef PXSORT2_MIXER_H
-#define PXSORT2_MIXER_H
+#ifndef PXSORT2_CHANNELCOPIER_H
+#define PXSORT2_CHANNELCOPIER_H
 
 #include "common.h"
+#include "PixelMixer.h"
 
-namespace pxsort::mixer {
-    /**
-     * Create a PixelMixer that applies the given linear transformation
-     * to the input pixels. The two, 3-channel input pixels are concatenated
-     * and treated as a 6-dimensional point for the linear transformation.
-     *
-     * This function normalizes the row-vectors of the given transformation.
-     * @param T
-     * @return
-     */
-    PixelMixer linear(const cv::Matx66f &T);
 
+/**
+ * A ChannelCopier is a PixelMixer that mixes a pair of pixels by copying input
+ *   channel values to output channel values according to a specified rule.
+ */
+class pxsort::ChannelCopier : public PixelMixer {
+public:
     enum Swap {
         R,   // Swap the red channels.
         G,   // Swap the green channels.
@@ -24,14 +20,6 @@ namespace pxsort::mixer {
         GB,  // Swap the green and blue channels.
         RGB  // Swap the red, green and blue channels.
     };
-
-    /**
-     * Returns a PixelMixer that swaps the channels specified by the given
-     *   Swap.
-     * @param s
-     * @return
-     */
-    PixelMixer swapper(Swap s);
 
     enum InputChannel {
         IN1_R = 0,  // The red channel of the first input pixel.
@@ -43,7 +31,14 @@ namespace pxsort::mixer {
     };
 
     /**
-     * Returns a PixelMixer that copies channels from the input pixels to
+     * Create a ChannelCopier that swaps the channels of the two input pixels
+     *   as specified by the given swap.
+     */
+    ChannelCopier(Swap);
+
+
+    /**
+     * Create a ChannelCopier that copies channels from the input pixels to
      *   the output pixels as specified.
      * @param out1_r The input channel to copy to the first output pixel's
      *               red channel.
@@ -57,14 +52,25 @@ namespace pxsort::mixer {
      *               green channel.
      * @param out2_b The input channel to copy to the second output pixel's
      *               blue channel.
-     * @return
      */
-    PixelMixer copier(InputChannel out1_r,
-                      InputChannel out1_g,
-                      InputChannel out1_b,
-                      InputChannel out2_r,
-                      InputChannel out2_g,
-                      InputChannel out2_b);
-}
+    ChannelCopier(InputChannel out1_r,
+                  InputChannel out1_g,
+                  InputChannel out1_b,
+                  InputChannel out2_r,
+                  InputChannel out2_g,
+                  InputChannel out2_b);
 
-#endif //PXSORT2_MIXER_H
+    std::pair<Pixel, Pixel>
+    operator()(const Pixel &pixel, const Pixel &pixel1) override;
+
+private:
+    InputChannel out1_r;
+    InputChannel out1_g;
+    InputChannel out1_b;
+    InputChannel out2_r;
+    InputChannel out2_g;
+    InputChannel out2_b;
+};
+
+
+#endif //PXSORT2_CHANNELCOPIER_H

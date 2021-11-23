@@ -1,7 +1,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 
-#include "Mixer.h"
+#include "PixelMixer.h"
 
 using namespace pxsort;
 namespace py = pybind11;
@@ -44,9 +44,9 @@ void init_mixer(py::module_ &m) {
 
     py::enum_<mixer::Swap>
             (m, "Swap")
-            .value("R", mixer::R, "Swap the red channels.")
-            .value("G", mixer::G, "Swap the green channels.")
-            .value("B", mixer::B, "Swap the blue channels.")
+            .value("RED", mixer::R, "Swap the red channels.")
+            .value("GREEN", mixer::G, "Swap the green channels.")
+            .value("BLUE", mixer::B, "Swap the blue channels.")
             .value("RG", mixer::RG, "Swap red and green channels.")
             .value("RB", mixer::RB, "Swap red and blue channels.")
             .value("GB", mixer::GB, "Swap green and blue channels.")

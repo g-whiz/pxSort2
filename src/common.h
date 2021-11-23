@@ -36,11 +36,26 @@ namespace pxsort {
     class Segmentation;
     class Grid;
 
-    template<typename T, int D>
-    requires (D > 0)
+    class PixelMixer;
+    class LinearMixer;
+    class ChannelCopier;
+
+
+    template<typename T, typename... ParamTypes>
     class Parameterization;
 
-    class ParameterizedLinearMixer;
+    template<typename T>
+    using Static = Parameterization<T>;
+
+    template<typename T>
+    using TimeVarying = Parameterization<T, double>;
+
+    template<typename T, size_t Dimension>
+    using Field = Parameterization<T, cv::Vec<float, Dimension>>;
+
+
+
+
 
     /* Library typedefs. */
 
@@ -58,14 +73,7 @@ namespace pxsort {
      */
     typedef std::function<float(const Pixel&, const Pixel&)> PixelComparator;
 
-    /**
-     * A PixelMixer is a callable object that mixes/transforms two pixels to
-     *   produce two new pixels.
-     * In this sense, a PixelMixer can be considered an endomorphism on the set
-     *   [0, 1]^6.
-     */
-    typedef std::function<std::pair<Pixel, Pixel>(const Pixel&, const Pixel&)>
-            PixelMixer;
+
 
     /**
      * A PixelPredicate is a predicate that evaluates whether some property of
@@ -114,9 +122,9 @@ namespace pxsort {
 
     /** Indices of channels in Pixels by name. */
     enum Channel {
-        R = 0,
-        G = 1,
-        B = 2
+        RED = 0,
+        GREEN = 1,
+        BLUE = 2
     };
 
     /**

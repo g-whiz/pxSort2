@@ -14,14 +14,14 @@ int Rectangle::size() {
 Pixel Rectangle::forwardGetPixel(int idx, ChannelSkew &skew) {
     assert(img != nullptr);
 
-    Point c0Coords = this->channelCoordinates(idx, skew, R);
-    float c0 = img->at(c0Coords.x, c0Coords.y, R);
+    Point c0Coords = this->channelCoordinates(idx, skew, RED);
+    float c0 = img->at(c0Coords.x, c0Coords.y, RED);
 
-    Point c1Coords = this->channelCoordinates(idx, skew, G);
-    float c1 = img->at(c1Coords.x, c1Coords.y, G);
+    Point c1Coords = this->channelCoordinates(idx, skew, GREEN);
+    float c1 = img->at(c1Coords.x, c1Coords.y, GREEN);
 
-    Point c2Coords = this->channelCoordinates(idx, skew, B);
-    float c2 = img->at(c2Coords.x, c2Coords.y, B);
+    Point c2Coords = this->channelCoordinates(idx, skew, BLUE);
+    float c2 = img->at(c2Coords.x, c2Coords.y, BLUE);
 
     return Pixel(c0, c1, c2);
 }
@@ -30,14 +30,14 @@ void Rectangle::forwardSetPixel(int idx, ChannelSkew &skew,
                                 const Pixel &px) {
     assert(img != nullptr);
 
-    Point c0Coords = this->channelCoordinates(idx, skew, R);
-    *img->ptr(c0Coords.x, c0Coords.y, R) = px[R];
+    Point c0Coords = this->channelCoordinates(idx, skew, RED);
+    *img->ptr(c0Coords.x, c0Coords.y, RED) = px[RED];
 
-    Point c1Coords = this->channelCoordinates(idx, skew, G);
-    *img->ptr(c1Coords.x, c1Coords.y, G) = px[G];
+    Point c1Coords = this->channelCoordinates(idx, skew, GREEN);
+    *img->ptr(c1Coords.x, c1Coords.y, GREEN) = px[GREEN];
 
-    Point c2Coords = this->channelCoordinates(idx, skew, B);
-    *img->ptr(c2Coords.x, c2Coords.y, B) = px[B];
+    Point c2Coords = this->channelCoordinates(idx, skew, BLUE);
+    *img->ptr(c2Coords.x, c2Coords.y, BLUE) = px[BLUE];
 }
 
 Rectangle::Rectangle(std::shared_ptr<Image> img,
