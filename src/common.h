@@ -40,6 +40,10 @@ namespace pxsort {
     class LinearMixer;
     class ChannelCopier;
 
+    class PixelPredicate;
+    class LinearPredicate;
+    class ThresholdPredicate;
+
 
     template<typename T, typename... ParamTypes>
     class Parameterization;
@@ -52,9 +56,6 @@ namespace pxsort {
 
     template<typename T, size_t Dimension>
     using Field = Parameterization<T, cv::Vec<float, Dimension>>;
-
-
-
 
 
     /* Library typedefs. */
@@ -72,18 +73,6 @@ namespace pxsort {
      *   pixel, respectively.
      */
     typedef std::function<float(const Pixel&, const Pixel&)> PixelComparator;
-
-
-
-    /**
-     * A PixelPredicate is a predicate that evaluates whether some property of
-     *   a pixel holds.
-     * A PixelPredicate f maps a Pixel p to the real numbers such that for the
-     *   equivalent predicate F on p, the following equivalency holds:
-     *     f(p) >= 0   <==>    F(p) == true
-     *     f(p) <  0   <==>    F(p) == false
-     */
-    typedef std::function<float(const Pixel&)> PixelPredicate;
 
     /**
      * A PixelProjection is a projective map from [0, 1]^3 to [0, 1].
@@ -109,8 +98,8 @@ namespace pxsort {
      * @return
      */
     inline ChannelSkew NO_SKEW() {
-        return ChannelSkew(0, 0, 0,
-                           0, 0, 0);
+        return {0, 0, 0,
+                0, 0, 0};
     }
 
     /** Traversal options for a Segment's pixels. */
@@ -139,6 +128,43 @@ namespace pxsort {
     inline T clamp(T x, T lo, T hi) {
         return MIN(hi, MAX(lo, x));
     }
+
+    template<typename T>
+    T min(T a, T b) {
+        return a < b ? a : b;
+    }
+
+    template<typename T, typename... Args>
+    T min(T first, Args... rest) {
+        T restMin = min(rest...);
+        return first < restMin ? first : restMin;
+    }
+
+    template<typename T>
+    T max(T a, T b) {
+        return a >= b ? a : b;
+    }
+
+    template<typename T, typename... Args>
+    T max(T first, Args... rest) {
+        T restMin = min(rest...);
+        return first >= restMin ? first : restMin;
+    }
+
+    template<typename Interface>
+    class CloneableInterface {
+    public:
+        virtual std::unique_ptr<Interface> clone() const = 0;
+    };
+
+    template<typename Interface, typename Implementation>
+    class CloneableImpl : public Interface {
+        std::unique_ptr<Interface> clone() const override {
+            return std::move(std::unique_ptr<Interface>(
+                    new Implementation(*((Implementation *) this))));
+        }
+    };
+
 }
 
 #endif //PXSORT2_COMMON_H

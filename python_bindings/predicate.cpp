@@ -1,7 +1,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "Predicate.h"
+#include "PixelPredicate.h"
 #include "wrapper.h"
 
 using namespace pxsort;

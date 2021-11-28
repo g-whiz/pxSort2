@@ -9,7 +9,7 @@
  * A ChannelCopier is a PixelMixer that mixes a pair of pixels by copying input
  *   channel values to output channel values according to a specified rule.
  */
-class pxsort::ChannelCopier : public PixelMixer {
+class pxsort::ChannelCopier : public CloneableImpl<PixelMixer, ChannelCopier> {
 public:
     enum Swap {
         R,   // Swap the red channels.
@@ -34,7 +34,7 @@ public:
      * Create a ChannelCopier that swaps the channels of the two input pixels
      *   as specified by the given swap.
      */
-    ChannelCopier(Swap);
+    explicit ChannelCopier(Swap);
 
 
     /**
@@ -59,6 +59,8 @@ public:
                   InputChannel out2_r,
                   InputChannel out2_g,
                   InputChannel out2_b);
+
+    ChannelCopier(const ChannelCopier&);
 
     std::pair<Pixel, Pixel>
     operator()(const Pixel &pixel, const Pixel &pixel1) override;

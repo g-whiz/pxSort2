@@ -1,5 +1,5 @@
 
-#include "Predicate.h"
+#include "PixelPredicate.h"
 
 using namespace pxsort;
 

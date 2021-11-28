@@ -85,3 +85,7 @@ int BucketSort::bucket(const Pixel &px) {
     int b = clamp<int>(int (px_proj / step), 0, nBuckets - 1);
     return b;
 }
+
+BucketSort::BucketSort(const BucketSort &other)
+: BucketSort(other.skew, other.traversal, other.project,
+             other.mix, other.nBuckets) {}

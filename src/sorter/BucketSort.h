@@ -1,6 +1,7 @@
 #ifndef PXSORT2_BUCKETSORT_H
 #define PXSORT2_BUCKETSORT_H
 
+#include <PixelMixer.h>
 #include "common.h"
 #include "Sorter.h"
 
@@ -14,6 +15,8 @@ public:
                PixelMixer mix,
                int nBuckets);
 
+    BucketSort(const BucketSort&);
+
 private:
 
     void attachToSegment(Segment &tile) override;
@@ -22,12 +25,11 @@ private:
 
     [[nodiscard]] std::unique_ptr<Sorter> clone() const override;
 
-    std::unique_ptr<PixelProjection> project;
-    std::unique_ptr<PixelMixer> mix;
-    const int nBuckets;
-
     int bucket(const Pixel &);
 
+    PixelProjection project;
+    PixelMixer mix;
+    const int nBuckets;
 };
 
 #endif //PXSORT2_BUCKETSORT_H

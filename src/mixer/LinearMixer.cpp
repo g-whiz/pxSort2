@@ -17,3 +17,5 @@ std::pair<Pixel, Pixel>
     Pixel out2(out[3], out[4], out[5]);
     return {out1, out2};
 }
+
+LinearMixer::LinearMixer(const LinearMixer &other) : T(other.T){}

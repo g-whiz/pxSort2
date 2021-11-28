@@ -10,9 +10,11 @@
  * and treated as a 6-dimensional point, which is mapped to another
  * 6-dimensional point by the linear transformation.
  */
-class pxsort::LinearMixer : public PixelMixer {
+class pxsort::LinearMixer : public CloneableImpl<PixelMixer, LinearMixer> {
 public:
-    LinearMixer(const cv::Matx66f&);
+    explicit LinearMixer(const cv::Matx66f&);
+
+    LinearMixer(const LinearMixer&);
 
     std::pair<Pixel, Pixel>
     operator()(const Pixel &pixel, const Pixel &pixel1) override;

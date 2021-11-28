@@ -37,3 +37,7 @@ std::pair<Pixel, Pixel>
     Pixel out2(in[out2_r], in[out2_g], in[out2_b]);
     return {out1, out2};
 }
+
+ChannelCopier::ChannelCopier(const ChannelCopier &other)
+    : out1_r(other.out1_r), out1_g(other.out1_g), out1_b(other.out1_b),
+      out2_r(other.out2_r), out2_g(other.out2_g), out2_b(other.out2_b) {}
