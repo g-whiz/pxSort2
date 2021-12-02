@@ -13,7 +13,7 @@
 #include "Segment.h"
 #include "effect/PartialBubbleSort.h"
 #include "effect/PartialHeapify.h"
-#include "Comparator.h"
+#include "PixelComparator.h"
 #include "PixelMixer.h"
 
 using namespace pxsort;

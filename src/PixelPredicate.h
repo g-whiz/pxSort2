@@ -14,28 +14,27 @@
 class pxsort::PixelPredicate : public CloneableInterface<PixelPredicate> {
 public:
     virtual float operator()(const Pixel&) = 0;
-    virtual ~PixelPredicate() = default;
 
-    template<template<typename> class Pointer>
-    std::unique_ptr<PixelPredicate> operator&&(
-            Pointer<PixelPredicate> &other) {
-        return conjunction(other->clone());
+    template<typename T>
+        requires is_ptr_to_derived<PixelPredicate, T>
+    std::unique_ptr<PixelPredicate> logical_and(T &other) {
+        return _conjunction(other->clone());
     }
 
-    template<template<typename> class Pointer>
-    std::unique_ptr<PixelPredicate> operator||(
-            Pointer<PixelPredicate> &other) {
-        return disjunction(other->clone());
+    template<typename T>
+        requires is_ptr_to_derived<PixelPredicate, T>
+    std::unique_ptr<PixelPredicate> logical_or(T &other) {
+        return _disjunction(other->clone());
     }
 
-    std::unique_ptr<PixelPredicate> operator! ();
+    std::unique_ptr<PixelPredicate> negate();
 
 private:
     std::unique_ptr<PixelPredicate>
-    conjunction(std::unique_ptr<PixelPredicate> &);
+    _conjunction(std::unique_ptr<PixelPredicate> &);
 
     std::unique_ptr<PixelPredicate>
-    disjunction(std::unique_ptr<PixelPredicate> &);
+    _disjunction(std::unique_ptr<PixelPredicate> &);
 };
 
 

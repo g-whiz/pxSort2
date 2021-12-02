@@ -23,7 +23,7 @@ private:
 };
 
 std::unique_ptr<PixelMixer>
-        PixelMixer::compose(std::unique_ptr<PixelMixer> &other) {
+        PixelMixer::_compose(std::unique_ptr<PixelMixer> &other) {
     return std::unique_ptr<PixelMixer>(
             new Composition(this->clone(), std::move(other)));
 }

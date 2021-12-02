@@ -1,6 +1,6 @@
 #include <pybind11/pybind11.h>
 
-#include "Projection.h"
+#include "PixelProjection.h"
 #include "wrapper.h"
 
 using namespace pxsort;

@@ -20,21 +20,26 @@ add_library(pxsort
         segmentation/Grid.cpp
         segmentation/Grid.h
         PixelMixer.h
-        Comparator.h
-        Comparator.cpp
+        PixelComparator.h
+        PixelComparator.cpp
         segment/Asendorf.cpp
         segment/Asendorf.h
         sorter/BucketSort.cpp
         sorter/BucketSort.h
-        Projection.h
+        PixelProjection.h
         PixelPredicate.h
-        Predicate.cpp
-        Projection.cpp
+        PixelProjection.cpp
         mixer/ChannelCopier.h
         mixer/ChannelCopier.cpp
         mixer/LinearMixer.h
         mixer/LinearMixer.cpp
-        Parameterization.h predicate/LinearPredicate.cpp predicate/LinearPredicate.h predicate/ThresholdPredicate.cpp predicate/ThresholdPredicate.h PixelMixer.cpp PixelPredicate.cpp)
+        Parameterization.h
+        predicate/LinearPredicate.cpp
+        predicate/LinearPredicate.h
+        predicate/ThresholdPredicate.cpp
+        predicate/ThresholdPredicate.h
+        PixelMixer.cpp
+        PixelPredicate.cpp)
 
 set_property(TARGET pxsort PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_include_directories(pxsort PUBLIC ${CMAKE_SOURCE_DIR}/src)

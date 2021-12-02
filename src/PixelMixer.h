@@ -13,18 +13,17 @@ class pxsort::PixelMixer : public CloneableInterface<PixelMixer> {
 public:
     virtual std::pair<Pixel, Pixel> operator()(const Pixel&, const Pixel&) = 0;
 
-    virtual ~PixelMixer() = default;
-
     /**
      * Returns a PixelMixer that is the composition of the given PixelMixers
      *   (applied right-to-left).
      */
-    template<template <typename> typename Pointer>
-    std::unique_ptr<PixelMixer> operator*(Pointer<PixelMixer> &mixer) {
-        return compose(mixer->clone());
+    template<typename T>
+        requires is_ptr_to_derived<PixelMixer, T>
+    std::unique_ptr<PixelMixer> compose(T &mixer) {
+        return _compose(mixer->clone());
     }
 
 private:
-    std::unique_ptr<PixelMixer> compose(std::unique_ptr<PixelMixer>&);
+    std::unique_ptr<PixelMixer> _compose(std::unique_ptr<PixelMixer>&);
 };
 #endif //PXSORT2_PIXELMIXER_H

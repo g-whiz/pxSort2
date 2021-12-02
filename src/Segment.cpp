@@ -31,11 +31,11 @@ Pixel Segment::getPixel(int idx, SegmentTraversal t, ChannelSkew skew) {
 
 int Segment::btbfToForwardIdx(int idx) {
 
-    int depth = PS_LOG_2(idx) - 1;
+    int depth = PXSORT_LOG_2(idx) - 1;
     int nSubtrees = 1 << depth;
     int subtree = PXSORT_MODULO((idx + 1), nSubtrees);
 
-    int fullHeight = PS_LOG_2(this->size()) - 1;
+    int fullHeight = PXSORT_LOG_2(this->size()) - 1;
     int subtreeHeight = fullHeight - depth;
 
     int subtreeSize = (1 << subtreeHeight) - 1;

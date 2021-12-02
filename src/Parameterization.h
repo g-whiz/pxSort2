@@ -4,8 +4,8 @@
 #include "common.h"
 
 /**
- * A parameterization over a category T maps D-dimensional vectors to objects
- * in T.
+ * A parameterization over a category Base maps D-dimensional vectors to objects
+ * in Base.
  * @tparam T
  * @tparam ParamTypes... List of types for each parameter.
  */

@@ -16,7 +16,7 @@
 /**
  * Safe base-2 uint32_t logarithm.
  */
-#define PS_LOG_2(x)      (31 - __builtin_clz(x))
+#define PXSORT_LOG_2(x)      (31 - __builtin_clz(x))
 
 namespace pxsort {
 
@@ -44,6 +44,9 @@ namespace pxsort {
     class LinearPredicate;
     class ThresholdPredicate;
 
+    class PixelProjection;
+
+    class PixelComparator;
 
     template<typename T, typename... ParamTypes>
     class Parameterization;
@@ -57,6 +60,18 @@ namespace pxsort {
     template<typename T, size_t Dimension>
     using Field = Parameterization<T, cv::Vec<float, Dimension>>;
 
+    template<typename T>
+    using pointer_traits_t = typename std::pointer_traits<T>::element_type;
+
+    /**
+     * Concept to test whether Derived_Ptr is a pointer to a type derived from
+     *   Base.
+     * @tparam Base The base class to test for.
+     * @tparam Derived_Ptr The pointer to the derived type.
+     */
+    template<typename Base, typename Derived_Ptr>
+    concept is_ptr_to_derived =
+            std::is_base_of<Base, pointer_traits_t<Derived_Ptr>>::value;
 
     /* Library typedefs. */
 
@@ -64,23 +79,6 @@ namespace pxsort {
      * Pixels are always points in the unit cube, [0, 1]^3.
      */
     typedef cv::Vec3f Pixel;
-
-    /**
-     * A PixelComparator is a callable object that imposes some ordering on
-     *   Pixels.
-     * The value returned by a PixelComparator is negative, zero, or positive
-     *   when the first pixel is less-than, equal-to, or greater-than the second
-     *   pixel, respectively.
-     */
-    typedef std::function<float(const Pixel&, const Pixel&)> PixelComparator;
-
-    /**
-     * A PixelProjection is a projective map from [0, 1]^3 to [0, 1].
-     *
-     * It is used for applying a total ordering to pixels when performing a
-     * BucketSort.
-     */
-    typedef std::function<float(const Pixel&)> PixelProjection;
 
     /** Matrix of the form [S_1 S_2 S_3], where each S_i is a vector of the form
      *    (dx, dy) defining the offset within a Segment for retrieving the ith
@@ -155,6 +153,7 @@ namespace pxsort {
     class CloneableInterface {
     public:
         virtual std::unique_ptr<Interface> clone() const = 0;
+        virtual ~CloneableInterface() = default;
     };
 
     template<typename Interface, typename Implementation>
@@ -164,7 +163,6 @@ namespace pxsort {
                     new Implementation(*((Implementation *) this))));
         }
     };
-
 }
 
 #endif //PXSORT2_COMMON_H

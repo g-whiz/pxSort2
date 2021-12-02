@@ -13,11 +13,11 @@ PixelMixer pyLinearMixer(const py::array_t<float>& tArray) {
     py::buffer_info info = tArray.request();
 
     if (info.ndim != 2)
-        throw std::runtime_error("Incompatible dimension for given array T "
+        throw std::runtime_error("Incompatible dimension for given array Base "
                                  "- must be 2-dimensional.");
 
     if (info.shape[0] != 6 || info.shape[1] != 6)
-        throw std::runtime_error("Incompatible shape for given array T "
+        throw std::runtime_error("Incompatible shape for given array Base "
                                  "- must be (6, 6).");
 
     for (int i = 0; i < 6; i++)

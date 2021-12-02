@@ -1,6 +1,6 @@
 #include <pybind11/pybind11.h>
 
-#include "Comparator.h"
+#include "PixelComparator.h"
 
 using namespace pxsort;
 namespace cmp = pxsort::comparator;

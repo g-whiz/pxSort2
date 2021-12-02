@@ -58,18 +58,18 @@ private:
     std::unique_ptr<PixelPredicate> a;
 };
 
-std::unique_ptr<PixelPredicate> PixelPredicate::operator!() {
+std::unique_ptr<PixelPredicate> PixelPredicate::negate() {
     return std::unique_ptr<PixelPredicate>(new Negation(this->clone()));
 }
 
 std::unique_ptr<PixelPredicate>
-        PixelPredicate::conjunction(std::unique_ptr<PixelPredicate> &other) {
+        PixelPredicate::_conjunction(std::unique_ptr<PixelPredicate> &other) {
     return std::unique_ptr<PixelPredicate>(
             new Conjunction(this->clone(), std::move(other)));
 }
 
 std::unique_ptr<PixelPredicate>
-        PixelPredicate::disjunction(std::unique_ptr<PixelPredicate> &other) {
+        PixelPredicate::_disjunction(std::unique_ptr<PixelPredicate> &other) {
     return std::unique_ptr<PixelPredicate>(
             new Disjunction(this->clone(), std::move(other)));
 }
