@@ -37,15 +37,8 @@ namespace pxsort {
     class Grid;
 
     class PixelMixer;
-    class LinearMixer;
-    class ChannelCopier;
-
     class PixelPredicate;
-    class LinearPredicate;
-    class ThresholdPredicate;
-
     class PixelProjection;
-
     class PixelComparator;
 
     template<typename T, typename... ParamTypes>
@@ -153,11 +146,12 @@ namespace pxsort {
     class CloneableInterface {
     public:
         virtual std::unique_ptr<Interface> clone() const = 0;
-        virtual ~CloneableInterface() = default;
+        virtual ~CloneableInterface<Interface>() = default;
     };
 
     template<typename Interface, typename Implementation>
     class CloneableImpl : public Interface {
+    private:
         std::unique_ptr<Interface> clone() const override {
             return std::move(std::unique_ptr<Interface>(
                     new Implementation(*((Implementation *) this))));

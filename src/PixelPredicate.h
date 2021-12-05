@@ -11,33 +11,58 @@
  *     f(p) >= 0   <==>    F(p) == true
  *     f(p) <  0   <==>    F(p) == false
  */
-class pxsort::PixelPredicate : public CloneableInterface<PixelPredicate> {
+class pxsort::PixelPredicate {
 public:
-    virtual float operator()(const Pixel&) = 0;
+    PixelPredicate() = delete;
 
-    template<typename T>
-        requires is_ptr_to_derived<PixelPredicate, T>
-    std::unique_ptr<PixelPredicate> logical_and(T &other) {
-        return _conjunction(other->clone());
-    }
+    /**
+     * Creates a PixelPredicate that evaluates to true if and only
+     *   if a pixel's channels are above/below the specified thresholds.
+     * @param rMin The lower threshold for the red channel.
+     * @param rMax The upper threshold for the red channel.
+     * @param gMin The lower threshold for the green channel.
+     * @param gMax The upper threshold for the green channel.
+     * @param bMin The lower threshold for the blue channel.
+     * @param bMax The upper threshold for the blue channel.
+     */
+    explicit PixelPredicate(float rMin = 0.0,
+                            float rMax = 1.0,
+                            float gMin = 0.0,
+                            float gMax = 1.0,
+                            float bMin = 0.0,
+                            float bMax = 1.0);
 
-    template<typename T>
-        requires is_ptr_to_derived<PixelPredicate, T>
-    std::unique_ptr<PixelPredicate> logical_or(T &other) {
-        return _disjunction(other->clone());
-    }
+    /**
+     * Creates a PixelPredicate derived from the linear transformation:
+     *     f(p) = proj * p + b
+     * @param proj A linear map from [0, 1]^3 to [0, 1] in matrix form.
+     * @param bias A bias parameter
+     */
+    PixelPredicate(const cv::Vec3f& proj, float bias);
 
-    std::unique_ptr<PixelPredicate> negate();
+    PixelPredicate(const PixelPredicate &other);
+
+    /**
+     * Apply this PixelPredicate to the given pixel.
+     */
+    float operator()(const Pixel&) const;
+
+    PixelPredicate operator&&(const PixelPredicate &other) const;
+
+    PixelPredicate operator||(const PixelPredicate &other) const;
+
+    PixelPredicate operator!() const;
 
 private:
-    std::unique_ptr<PixelPredicate>
-    _conjunction(std::unique_ptr<PixelPredicate> &);
+    class Impl;
+    class LinearImpl;
+    class ThresholdImpl;
+    class CombinationImpl;
+    class NegationImpl;
 
-    std::unique_ptr<PixelPredicate>
-    _disjunction(std::unique_ptr<PixelPredicate> &);
+    explicit PixelPredicate(Impl *pImpl);
+
+    const std::unique_ptr<Impl> pImpl;
 };
-
-
-
 
 #endif //PXSORT2_PIXELPREDICATE_H

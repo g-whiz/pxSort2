@@ -2,74 +2,140 @@
 
 using namespace pxsort;
 
-template<typename Impl>
-class Product;
-class Conjunction;
-class Disjunction;
-class Negation;
-
-
-template<typename Impl>
-class Product : public CloneableImpl<PixelPredicate, Impl> {
+class PixelPredicate::Impl : public CloneableInterface<Impl> {
 public:
-    Product(std::unique_ptr<PixelPredicate> a,
-            std::unique_ptr<PixelPredicate> b)
-              : a(std::move(a)), b(std::move(b)){}
-
-    Product(const Product &other)
-        : Product(other.a->clone(), other.b->clone()){}
-
-protected:
-    std::unique_ptr<PixelPredicate> a;
-    std::unique_ptr<PixelPredicate> b;
+    virtual float operator()(const Pixel&) const = 0;
 };
 
-class Conjunction : public Product<Conjunction> {
+
+class PixelPredicate::LinearImpl :
+        public CloneableImpl<Impl, LinearImpl> {
+    const cv::Vec3f M;
+    const float b;
+
 public:
-    using Product<Conjunction>::Product;
+    LinearImpl(const cv::Vec3f& M, float b) : M(M), b(b) {}
+
+    LinearImpl(const LinearImpl &other) : M(other.M), b(other.b) {}
 
 private:
-    float operator()(const Pixel &pixel) override {
-        return MIN((*a)(pixel), (*b)(pixel));
+    float operator()(const Pixel &pixel) const override {
+        return M.dot(pixel) + b;
     }
 };
 
-class Disjunction : public Product<Disjunction> {
+class PixelPredicate::ThresholdImpl :
+        public CloneableImpl<Impl, ThresholdImpl> {
+    const float rMin;
+    const float rMax;
+    const float gMin;
+    const float gMax;
+    const float bMin;
+    const float bMax;
+
 public:
-    using Product<Disjunction>::Product;
+    explicit ThresholdImpl(float rMin = 0.0, float rMax = 1.0,
+                           float gMin = 0.0, float gMax = 1.0,
+                           float bMin = 0.0, float bMax = 1.0)
+         : rMin(rMin), rMax(rMax),
+           gMin(gMin), gMax(gMax),
+           bMin(bMin), bMax(bMax) {}
+
+    ThresholdImpl(const ThresholdImpl &other)
+        : rMin(other.rMin), rMax(other.rMax),
+          gMin(other.gMin), gMax(other.gMax),
+          bMin(other.bMin), bMax(other.bMax) {}
 
 private:
-    float operator()(const Pixel &pixel) override {
-        return MAX((*a)(pixel), (*b)(pixel));
+    float operator()(const Pixel &pixel) const override {
+        float rLo = pixel[RED] - rMin;
+        float rHi = rMax - pixel[RED];
+        float gLo = pixel[GREEN] - gMin;
+        float gHi = gMax - pixel[GREEN];
+        float bLo = pixel[BLUE] - bMin;
+        float bHi = bMax - pixel[BLUE];
+
+        return min(rLo, rHi, gLo, gHi, bLo, bHi);
     }
 };
 
-class Negation : public CloneableImpl<PixelPredicate, Negation> {
-public:
-    explicit Negation(std::unique_ptr<PixelPredicate> a) : a(std::move(a)) {}
 
-    Negation(const Negation &other) : a(other.a->clone()){}
+class PixelPredicate::CombinationImpl :
+        public CloneableImpl<Impl, CombinationImpl> {
+public:
+    enum Operand {
+        AND,
+        OR
+    };
 
 private:
-    float operator()(const Pixel &pixel) override {
-        return -(*a)(pixel);
-    }
+    const Operand op;
+    const PixelPredicate a;
+    const PixelPredicate b;
 
-    std::unique_ptr<PixelPredicate> a;
+public:
+    CombinationImpl(Operand op,
+                    const PixelPredicate &a,
+                    const PixelPredicate &b)
+              : op(op), a(a), b(b) {}
+
+    CombinationImpl(const CombinationImpl &other)
+        : CombinationImpl(other.op, other.a, other.b){}
+
+private:
+    float operator()(const Pixel &pixel) const override {
+        switch (op) {
+            case AND:
+                return MIN(a(pixel), b(pixel));
+            case OR:
+                return MAX(a(pixel), b(pixel));
+        }
+    }
 };
 
-std::unique_ptr<PixelPredicate> PixelPredicate::negate() {
-    return std::unique_ptr<PixelPredicate>(new Negation(this->clone()));
+class PixelPredicate::NegationImpl :
+        public CloneableImpl<Impl, NegationImpl> {
+    PixelPredicate a;
+
+public:
+    explicit NegationImpl(const PixelPredicate &a) : a(a) {}
+
+    NegationImpl(const NegationImpl &other) : a(other.a) {}
+
+private:
+    float operator()(const Pixel &pixel) const override {
+        return -a(pixel);
+    }
+};
+
+PixelPredicate::PixelPredicate(float rMin, float rMax,
+                               float gMin, float gMax,
+                               float bMin, float bMax)
+    : pImpl(new ThresholdImpl(rMin, rMax, gMin, gMax, bMin, bMax)) {}
+
+PixelPredicate::PixelPredicate(const cv::Vec3f &proj, float bias)
+    : pImpl(new LinearImpl(proj, bias)) {}
+
+PixelPredicate::PixelPredicate(const PixelPredicate &other)
+    : pImpl(other.pImpl->clone()) {}
+
+float PixelPredicate::operator()(const Pixel &pixel) const {
+    return (*pImpl)(pixel);
 }
 
-std::unique_ptr<PixelPredicate>
-        PixelPredicate::_conjunction(std::unique_ptr<PixelPredicate> &other) {
-    return std::unique_ptr<PixelPredicate>(
-            new Conjunction(this->clone(), std::move(other)));
+PixelPredicate PixelPredicate::operator&&(const PixelPredicate &that) const {
+    return PixelPredicate(
+            new CombinationImpl(CombinationImpl::AND, *this, that));
 }
 
-std::unique_ptr<PixelPredicate>
-        PixelPredicate::_disjunction(std::unique_ptr<PixelPredicate> &other) {
-    return std::unique_ptr<PixelPredicate>(
-            new Disjunction(this->clone(), std::move(other)));
+PixelPredicate PixelPredicate::operator||(const PixelPredicate &that) const {
+    return PixelPredicate(
+            new CombinationImpl(CombinationImpl::OR, *this, that));
 }
+
+PixelPredicate PixelPredicate::operator!() const {
+    return PixelPredicate(new NegationImpl(*this));
+}
+
+PixelPredicate::PixelPredicate(PixelPredicate::Impl *pImpl)
+    : pImpl(pImpl){}
