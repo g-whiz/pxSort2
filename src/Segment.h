@@ -1,8 +1,11 @@
 #ifndef PXSORT2_SEGMENT_H
 #define PXSORT2_SEGMENT_H
 
+#include <concepts>
+#include <opencv2/core/types.hpp>
 #include "common.h"
 #include "Sorter.h"
+#include "Image.h"
 
 /**
  * Interface for accessing a segment of an image.
@@ -18,9 +21,26 @@
  */
 class pxsort::Segment {
 public:
+    class Pixels;
+
+    /** Traversal options for a Segment's pixels. */
+    enum Traversal {
+        FORWARD,
+        REVERSE,
+        BINARY_TREE_BREADTH_FIRST
+    };
 
     /** Returns the number of pixels in this Segment. */
     virtual int size() = 0;
+
+    std::vector<Pixel> getPixels(const Image &img,
+                                 Traversal traversal,
+                                 const ChannelSkew &skew) const;
+
+    void putPixels(Image &img,
+                   Traversal traversal,
+                   const ChannelSkew &skew,
+                   const std::vector<Pixel> &pixels) const;
 
     /**
      * Returns the skewed pixel at the given index according to the
@@ -29,7 +49,7 @@ public:
      * @param t Method of traversing the pixels in this Segment.
      * @param skew Skew to use when retrieving the specified pixel.
      */
-    Pixel getPixel(int idx, SegmentTraversal t, ChannelSkew skew);
+    Pixel getPixel(int idx, Traversal t, ChannelSkew skew);
 
     /**
      * Sets the skewed pixel at the given index according to the
@@ -39,7 +59,7 @@ public:
      * @param skew Skew to use when setting the specified pixel.
      * @param px The Pixel to store in the specified index.
      */
-    void setPixel(int idx, SegmentTraversal t, ChannelSkew skew,
+    void setPixel(int idx, Traversal t, ChannelSkew skew,
                   const Pixel &px);
 
     /**
@@ -72,6 +92,8 @@ public:
      */
     void applyEffects();
 
+    virtual ~Segment() = default;
+
 protected:
     /**
      * Retrieves a Pixel from this Segment's underlying Image using a FORWARD
@@ -96,10 +118,38 @@ protected:
 
 
 private:
-    int getForwardIndex(int idx, SegmentTraversal t);
+    int getForwardIndex(int idx, Traversal t);
     int btbfToForwardIdx(int idx);
 
     std::vector<std::shared_ptr<Sorter>> effects;
+
+
+    class Impl;
+    class Rectangle;
+    class Asendorf;
+    class Mask;
+    class Polygon;
+    class Circle;
+    std::shared_ptr<Impl> pImpl;
+
+    /*
+     * todo:
+     *  - change of basis matrix used to impose order on mask pixels
+     *    (i.e. to determine the "forward" arrangement)
+     *  - operator-(const Segment &that):
+     *    returns mask that is the set diff of this segment's pixels and that's
+     *  - operator+(const Segment &that):
+     *    returns mask that is the union of this segment's pixels and that's
+     *  - parameterizations of segments that shift them around / transform them
+     *    over time
+     */
+};
+
+
+class pxsort::Segment::Pixels{
+public:
+    Pixels(const Segment &seg, std::vector<Pixel> pixels);
+    // todo? or maybe don't do it this way...
 };
 
 

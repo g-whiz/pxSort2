@@ -24,6 +24,8 @@ namespace pxsort {
 
     class Image;
 
+    class Effect;
+
     class Sorter;
     class PartialBubbleSort;
     class PartialHeapify;
@@ -68,10 +70,14 @@ namespace pxsort {
 
     /* Library typedefs. */
 
+
+
     /**
      * Pixels are always points in the unit cube, [0, 1]^3.
      */
     typedef cv::Vec3f Pixel;
+
+    typedef std::pair<Segment, std::vector<Pixel>> SegmentPixels;
 
     /** Matrix of the form [S_1 S_2 S_3], where each S_i is a vector of the form
      *    (dx, dy) defining the offset within a Segment for retrieving the ith
@@ -92,13 +98,6 @@ namespace pxsort {
         return {0, 0, 0,
                 0, 0, 0};
     }
-
-    /** Traversal options for a Segment's pixels. */
-    enum SegmentTraversal {
-        FORWARD,
-        REVERSE,
-        BINARY_TREE_BREADTH_FIRST
-    };
 
     /** Indices of channels in Pixels by name. */
     enum Channel {

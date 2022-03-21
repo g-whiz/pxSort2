@@ -15,7 +15,7 @@ PYBIND11_MAKE_OPAQUE(PixelComparator);
 PYBIND11_MAKE_OPAQUE(PixelMixer);
 
 std::shared_ptr<BucketSort> makeBucketSort(const ChannelSkew& skew,
-                                           SegmentTraversal traversal,
+                                           Segment::Traversal traversal,
                                            const PixelProjectionWrapper& pw,
                                            const PixelMixer& mix,
                                            int nBuckets) {
@@ -34,14 +34,14 @@ void init_effect(py::module_ &base) {
             (m, "PartialBubbleSort",
              "This Sorter applies one \"pass\" of the bubble sort algorithm "
              "each time applyToSegment is invoked.")
-             .def(py::init<const ChannelSkew&, SegmentTraversal,
+             .def(py::init<const ChannelSkew&, Segment::Traversal,
                            PixelComparator, PixelMixer>());
 
     py::class_<PartialHeapify, Sorter, std::shared_ptr<PartialHeapify>>
             (m, "PartialHeapify",
              "This Sorter applies one bubble-down \"pass\" of the heapify "
              "algorithm each time applyToSegment is invoked.")
-             .def(py::init<const ChannelSkew&, SegmentTraversal,
+             .def(py::init<const ChannelSkew&, Segment::Traversal,
                            PixelComparator, PixelMixer>());
 
     py::class_<BucketSort, Sorter, std::shared_ptr<BucketSort>>

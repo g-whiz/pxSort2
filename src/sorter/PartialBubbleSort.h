@@ -3,13 +3,14 @@
 
 #include "common.h"
 #include "Sorter.h"
+#include "Segment.h"
 
 using namespace pxsort;
 
 class pxsort::PartialBubbleSort : public Sorter {
 public:
     PartialBubbleSort(const ChannelSkew &skew,
-                      SegmentTraversal traversal,
+                      ::Segment::Traversal traversal,
                       PixelComparator cmp,
                       PixelMixer mix);
 

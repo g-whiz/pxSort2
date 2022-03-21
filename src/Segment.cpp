@@ -3,7 +3,7 @@
 
 using namespace pxsort;
 
-int Segment::getForwardIndex(int idx, SegmentTraversal t) {
+int Segment::getForwardIndex(int idx, Traversal t) {
     idx = PXSORT_MODULO(idx, this->size());
     switch (t) {
         case REVERSE:
@@ -18,13 +18,13 @@ int Segment::getForwardIndex(int idx, SegmentTraversal t) {
     }
 }
 
-void Segment::setPixel(int idx, SegmentTraversal t,
-                    ChannelSkew skew, const Pixel &px) {
+void Segment::setPixel(int idx, Traversal t,
+                       ChannelSkew skew, const Pixel &px) {
     int fwdIdx = this->getForwardIndex(idx, t);
     this->forwardSetPixel(fwdIdx, skew, px);
 }
 
-Pixel Segment::getPixel(int idx, SegmentTraversal t, ChannelSkew skew) {
+Pixel Segment::getPixel(int idx, Traversal t, ChannelSkew skew) {
     int fwdIdx = this->getForwardIndex(idx, t);
     return this->forwardGetPixel(fwdIdx, skew);
 }
@@ -60,3 +60,18 @@ void Segment::applyEffects() {
 std::shared_ptr<Sorter> Segment::getEffect(int i) {
     return effects.at(i);
 }
+
+class Segment::Impl {
+public:
+    virtual int size() = 0;
+
+    virtual cv::Point2i pixelCoordinates(int fwdIdx) = 0;
+
+
+
+    virtual Pixel forwardGetPixel(int idx,
+                                  ChannelSkew &skew) = 0;
+    virtual void forwardSetPixel(int idx,
+                                 ChannelSkew &skew,
+                                 const Pixel &pixel) = 0;
+};

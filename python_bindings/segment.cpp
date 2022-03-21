@@ -18,8 +18,8 @@ std::shared_ptr<Asendorf> makeAsendorf(const std::shared_ptr<Segment>& segment,
 void init_segment(py::module_ &base) {
     auto m = base.def_submodule("segment");
 
-    py::enum_<SegmentTraversal>(m, "SegmentTraversal",
-                            "Traversal options for a Segment's pixels.")
+    py::enum_<Segment::Traversal>(m, "Traversal",
+                                  "Traversal options for a Segment's pixels.")
             .value("Forward", FORWARD)
             .value("Reverse", REVERSE)
             .value("BinaryTreeBreadthFirst", BINARY_TREE_BREADTH_FIRST);

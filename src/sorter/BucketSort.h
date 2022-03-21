@@ -4,13 +4,14 @@
 #include <PixelMixer.h>
 #include "common.h"
 #include "Sorter.h"
+#include "Segment.h"
 
 using namespace pxsort;
 
 class pxsort::BucketSort : public Sorter {
 public:
     BucketSort(const ChannelSkew &skew,
-               SegmentTraversal traversal,
+               ::Segment::Traversal traversal,
                PixelProjection project,
                PixelMixer mix,
                int nBuckets);

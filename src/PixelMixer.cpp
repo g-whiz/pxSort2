@@ -122,7 +122,7 @@ pxsort::PixelMixer::PixelMixer(PixelMixer::InputChannel out1_r,
     : pImpl(new CopierImpl(out1_r, out1_g, out1_b, out2_r, out2_g, out2_b)) {}
 
 pxsort::PixelMixer::PixelMixer(const PixelMixer &other)
-    : pImpl(other.pImpl->clone()) {}
+    : pImpl(other.pImpl) {}
 
 std::pair<Pixel, Pixel>
 pxsort::PixelMixer::operator()(const Pixel &in1, const Pixel &in2) const {

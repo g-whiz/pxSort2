@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "Sorter.h"
+#include "Segment.h"
 
 /**
  * An Sorter that applies a partial pass of the heapify algorithm each time
@@ -20,7 +21,7 @@ public:
     void applyToSegment(Segment &tile) override;
 
     PartialHeapify(const ChannelSkew &skew,
-            SegmentTraversal traversal,
+            ::Segment::Traversal traversal,
             PixelComparator cmp,
             PixelMixer mix);
 

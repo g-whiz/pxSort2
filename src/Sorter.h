@@ -2,6 +2,7 @@
 #define PXSORT2_SORTER_H
 
 #include "common.h"
+#include "Segment.h"
 
 /**
  * Base interface for effects. An Sorter is associated with a specific Segment.
@@ -17,6 +18,12 @@
 class pxsort::Sorter {
 public:
     virtual ~Sorter() = default;
+
+    typedef std::pair<Segment, std::vector<Pixel>> Result;
+
+    Result sortSegment(const Image &img, const Segment & segment);
+
+
     /**
      * Associates this sorter with the given Segment. This method should be
      * called once at initialization.
@@ -40,7 +47,7 @@ public:
     [[nodiscard]] virtual std::unique_ptr<Sorter> clone() const = 0;
 
     Sorter(const ChannelSkew &skew,
-           SegmentTraversal traversal);
+           Segment::Traversal traversal);
 
     /**
      * Integral valued (x, y) skew for channel access for each channel.
@@ -50,7 +57,18 @@ public:
     /**
      * Traversal strategy when applying effects to a segment.
      */
-    SegmentTraversal traversal;
+    Segment::Traversal traversal;
+
+private:
+    class Impl;
+    class BucketSort;        //todo
+    class PartialBubbleSort; //todo: applies N iters of bubble sort
+    class PartialHeapify;    //todo: applies N iters of heapify
+    class Heapify;           //todo
+    class Composition;       //todo: applies a sequence of composed sorters
+
+
+    const std::unique_ptr<Impl> pImpl;
 };
 
 #endif //PXSORT2_SORTER_H

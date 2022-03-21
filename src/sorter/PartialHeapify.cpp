@@ -51,7 +51,7 @@ void PartialHeapify::applyToSegment(Segment &tile) {
 }
 
 PartialHeapify::PartialHeapify(const ChannelSkew &skew,
-                 const SegmentTraversal traversal,
+                 const ::Segment::Traversal traversal,
                  PixelComparator cmp,
                  PixelMixer mix)
         : Sorter(skew, traversal),

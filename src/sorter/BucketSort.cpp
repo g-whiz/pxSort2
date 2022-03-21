@@ -67,7 +67,7 @@ std::vector<cv::Vec2d> makeBucketRanges(int nBuckets,
 }
 
 BucketSort::BucketSort(const ChannelSkew &skew,
-                       SegmentTraversal traversal,
+                       ::Segment::Traversal traversal,
                        PixelProjection project,
                        PixelMixer mix,
                        int nBuckets)

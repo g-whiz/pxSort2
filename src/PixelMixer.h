@@ -94,6 +94,6 @@ private:
 
     explicit PixelMixer(Impl *pImpl);
 
-    const std::unique_ptr<Impl> pImpl;
+    const std::shared_ptr<Impl> pImpl;
 };
 #endif //PXSORT2_PIXELMIXER_H

@@ -36,7 +36,6 @@ public:
 private:
     const cv::Vec3f M;
     const float b;
-
 };
 
 #endif //PXSORT2_PIXELPROJECTION_H

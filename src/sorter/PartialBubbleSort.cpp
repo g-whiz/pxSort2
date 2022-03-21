@@ -25,7 +25,7 @@ void PartialBubbleSort::applyToSegment(Segment &tile) {
 }
 
 PartialBubbleSort::PartialBubbleSort(const ChannelSkew &skew,
-                                     const SegmentTraversal traversal,
+                                     const ::Segment::Traversal traversal,
                                      PixelComparator cmp,
                                      PixelMixer mix)
         : Sorter(skew, traversal), cmp(std::move(cmp)), mix(std::move(mix)) {}
