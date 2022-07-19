@@ -64,8 +64,8 @@ private:
     class BucketSort;        //todo
     class PartialBubbleSort; //todo: applies N iters of bubble sort
     class PartialHeapify;    //todo: applies N iters of heapify
-    class Heapify;           //todo
-    class Composition;       //todo: applies a sequence of composed sorters
+    class Heapify;           //todo: applies P iters of ParialHeapify to a
+                             //      segment containing P pixels
 
 
     const std::unique_ptr<Impl> pImpl;

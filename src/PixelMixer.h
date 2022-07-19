@@ -90,6 +90,7 @@ private:
     class Impl;
     class LinearImpl;
     class CopierImpl;
+    class BitwiseImpl; // todo: converts channels to
     class CompositionImpl;
 
     explicit PixelMixer(Impl *pImpl);

@@ -54,6 +54,7 @@ public:
      */
     std::shared_ptr<Segment> getSegment(int i);
 
+private:
     /** The Segments in this Segmentation. */
     std::vector<std::shared_ptr<Segment>> segments;
 };

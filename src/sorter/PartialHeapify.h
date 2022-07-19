@@ -9,7 +9,7 @@
  * An Sorter that applies a partial pass of the heapify algorithm each time
  *   apply is called. In particular, applyToSegment performs a pseudo-bubble-down
  *   operation on some element of a binary heap.
- * Since the mix operation doesn't necessarily perform a swapper, this is not
+ * Since the mix operation doesn't necessarily perform a swap, this is not
  *   a true bubble down operation. But the sorter proceeds as if it were
  *   (i.e. it assumes we are making progress towards restoring the heap
  *   property).
