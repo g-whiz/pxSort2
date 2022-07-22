@@ -128,8 +128,6 @@ private:
     class Rectangle;
     class Asendorf;
     class Mask;
-    class Polygon;
-    class Circle;
     std::shared_ptr<Impl> pImpl;
 
     /*
