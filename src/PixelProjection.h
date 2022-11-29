@@ -23,7 +23,7 @@ public:
     /**
      * Create a PixelProjection that returns the specified channel for any
      *   given pixel.
-     * @param channel The channel to project.
+     * @param channel The channel to projectPixel.
      */
     explicit PixelProjection(Channel channel);
 

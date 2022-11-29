@@ -12,13 +12,13 @@
 class pxsort::PixelMixer {
 public:
     enum Swap {
-        R,   // Swap the red channels.
-        G,   // Swap the green channels.
-        B,   // Swap the blue channels.
-        RG,  // Swap the red and green channels.
-        RB,  // Swap the red and blue channels.
-        GB,  // Swap the green and blue channels.
-        RGB  // Swap the red, green and blue channels.
+        R,   // Swap the red cn.
+        G,   // Swap the green cn.
+        B,   // Swap the blue cn.
+        RG,  // Swap the red and green cn.
+        RB,  // Swap the red and blue cn.
+        GB,  // Swap the green and blue cn.
+        RGB  // Swap the red, green and blue cn.
     };
 
     enum InputChannel {
@@ -40,14 +40,14 @@ public:
 
 
     /**
-     * Creates a PixelMixer that swaps the channels of the two input pixels
+     * Creates a PixelMixer that swaps the cn of the two input pixels
      *   as specified by the given swap.
      */
     explicit PixelMixer(Swap swap);
 
 
     /**
-     * Creates a PixelMixer that copies channels from the input pixels to
+     * Creates a PixelMixer that copies cn from the input pixels to
      *   the output pixels as specified.
      * @param out1_r The input channel to copy to the first output pixel's
      *               red channel.
@@ -90,7 +90,7 @@ private:
     class Impl;
     class LinearImpl;
     class CopierImpl;
-    class BitwiseImpl; // todo: converts channels to
+    class BitwiseImpl; // todo: converts cn to
     class CompositionImpl;
 
     explicit PixelMixer(Impl *pImpl);

@@ -5,3 +5,6 @@
 [submodule "extern/computecpp-sdk"]
 	path = extern/computecpp-sdk
 	url = git@github.com:codeplaysoftware/computecpp-sdk.git
+[submodule "extern/cpp-typelist"]
+	path = extern/cpp-typelist
+	url = https://github.com/lipk/cpp-typelist.git

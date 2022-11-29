@@ -17,7 +17,7 @@ public:
 
     /**
      * Creates a PixelPredicate that evaluates to true if and only
-     *   if a pixel's channels are above/below the specified thresholds.
+     *   if a pixel's cn are above/below the specified thresholds.
      * @param rMin The lower threshold for the red channel.
      * @param rMax The upper threshold for the red channel.
      * @param gMin The lower threshold for the green channel.

@@ -17,58 +17,51 @@
  */
 class pxsort::Sorter {
 public:
-    virtual ~Sorter() = default;
+    class SorterImpl;
 
-    typedef std::pair<Segment, std::vector<Pixel>> Result;
-
-    Result sortSegment(const Image &img, const Segment & segment);
-
+    Sorter(const Sorter&) = default;
 
     /**
-     * Associates this sorter with the given Segment. This method should be
-     * called once at initialization.
-     *
-     * The purpose of this method is to initialize any internal state in an
-     *   sorter using the information about the given Segment (i.e. its size).
-     * @param segment
-     */
-    virtual void attachToSegment(Segment&) = 0;
-
-    /**
-     * Applies this sorter to a Segment
-     * @param segment
-     */
-    virtual void applyToSegment(Segment&) = 0;
-
-    /**
-     * Returns a copier of this sorter.
+     * Returns a sorted (deep) copy of the given SegmentPixels.
+     * @param pixels The SegmentPixels to sort.
      * @return
      */
-    [[nodiscard]] virtual std::unique_ptr<Sorter> clone() const = 0;
-
-    Sorter(const ChannelSkew &skew,
-           Segment::Traversal traversal);
+    [[nodiscard]]
+    SegmentPixels operator()(const SegmentPixels& pixels) const;
 
     /**
-     * Integral valued (x, y) skew for channel access for each channel.
+     * Returns a (deep) copy of basePixels that has had the pixels from
+     * skewedPixels sorted into it.
+     * Note: base and skewed must have the same size().
+     * @param basePixels The SegmentPixels to sort.
+     * @param skewedPixels The skewed SegmentPixels to sort into base.
+     * @return
      */
-    ChannelSkew skew;
+    [[nodiscard]]
+    SegmentPixels operator()(
+            const SegmentPixels& basePixels,
+            const SegmentPixels& skewedPixels) const;
 
-    /**
-     * Traversal strategy when applying effects to a segment.
-     */
-    Segment::Traversal traversal;
+    [[nodiscard]]
+    static Sorter bucketSort(const Map& pixelProjection,
+                             const Map& pixelMixer,
+                             uint32_t nBuckets);
+
+    [[nodiscard]]
+    static Sorter heapify(const Map& pixelComparator,
+                          const Map& pixelMixer,
+                          std::optional<uint32_t> nIters = {});
+
+    [[nodiscard]]
+    static Sorter bubble(const Map& pixelComparator,
+                         const Map& pixelMixer,
+                         uint32_t nIters);
 
 private:
-    class Impl;
-    class BucketSort;        //todo
-    class PartialBubbleSort; //todo: applies N iters of bubble sort
-    class PartialHeapify;    //todo: applies N iters of heapify
-    class Heapify;           //todo: applies P iters of ParialHeapify to a
-                             //      segment containing P pixels
+    Sorter(uint32_t pixelDepth, std::shared_ptr<SorterImpl>);
 
-
-    const std::unique_ptr<Impl> pImpl;
+    const uint32_t pixelDepth;
+    const std::shared_ptr<SorterImpl> pImpl;
 };
 
 #endif //PXSORT2_SORTER_H

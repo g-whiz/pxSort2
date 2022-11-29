@@ -2,6 +2,7 @@
 #include "Image.h"
 #include "segment/Rectangle.h"
 
+
 using namespace pxsort;
 
 Grid::Grid(const std::shared_ptr<Image>& img,

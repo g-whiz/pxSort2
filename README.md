@@ -1,13 +1,17 @@
 **Notes & Thoughts**
+
+ - Numba enables JIT compilation of Python functions to native code:
+   - use this instead of DSL to enable definition of Maps on the fly from Python
+
  - Why not implement parameterization stuff in Python? 
  - Seems that this would be easier and not have any real performance hit...
 
- - Missing functionality from Android app: sort based on order in one colour space 
-     (e.g. HSV), but mix based on a different colour space (e.g. RGB). 
+ - Missing functionality from Android app: sorted based on order in one colour space 
+     (e.g. HSV), but mixPixels based on a different colour space (e.g. RGB). 
    This is partly how the "Antagone" filter works.
-   - generalization: sort based on an arbitrary real-valued function 
+   - generalization: sorted based on an arbitrary real-valued function 
      ```f: R^2 -> R```
-   - examples: function that computes hue, function that returns colour channels 
+   - examples: function that computes hue, function that returns colour cn 
      from a different image (this is an AE Pixel Sort feature)
  - Missing functionality from Android app: combine pixels via bitwise operations 
    on uint8_t channel values (e.g. XOR, Multiply, etc.).
@@ -22,9 +26,9 @@
  - **Idea:** Sort texture / procedurally generated surface colouring and render 
    it on a 3d model. Animate this. 
  
- - Major meory leak somewhere: image data not being free'd somewhere in the 
+ - Major meory leak somewhere: image pixelData not being free'd somewhere in the 
    load process. No leaks apparent on save, so colour conversion and retrieval 
-   of pixel data seem fine.
+   of pixel pixelData seem fine.
 
 **Python API Changes**
  - Scrap PyBind11, migrate to SWIG. Seems more mature and capable 
@@ -38,7 +42,7 @@
      implementation at a given time.
  - Animation may use same source image for each frame, progressively sorted 
      frames, or a stream of video frames. 
-   Can mix these with keyframing as well.
+   Can mixPixels these with keyframing as well.
    Option with video frames to provide frames at reduced (e.g. 1/2) framerate, 
      and use sorting to interpolate frames (either use multiples of the same 
      source frame or progressively).

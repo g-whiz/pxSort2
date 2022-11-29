@@ -20,91 +20,131 @@
 
 namespace pxsort {
 
+    /**
+     * A type trait whose value is true iff the given trait is true for all
+     *   given types.
+     * @tparam Trait The trait to evaluate.
+     * @tparam T One or more types to evaluate the trait on.
+     */
+    template<template<typename> typename Trait, typename... T> struct all;
+
+    template<template<typename> typename Trait,
+            typename First,
+            typename Second,
+            typename... Rest>
+    struct all<Trait, First, Second, Rest...> : std::integral_constant<bool,
+            Trait<First>::value && all<Trait, Second, Rest...>::value> {};
+
+    template<template<typename> typename Trait, typename T>
+    struct all<Trait, T> : std::integral_constant<bool, Trait<T>::value> {};
+
+    /**
+     * A type trait whose value is true if all of the given integers are valid
+     * numbers of pixel valid_dimensions.
+     * @tparam dimensions dimension sizes to check the validity of
+     */
+    template <int... dimensions> struct is_valid_dimensions;
+
+    template <int first, int second, int... rest>
+    struct is_valid_dimensions<first, second, rest...> :
+        std::integral_constant<bool,
+            (0 < first)
+                && (first < PXSORT_MAX_DIMENSIONS)
+                && is_valid_dimensions<second, rest...>::value> {};
+
+    template <int dimension>
+    struct is_valid_dimensions<dimension> :
+        std::integral_constant<bool,
+            (0 < dimension)
+                && (dimension < PXSORT_MAX_DIMENSIONS)> {};
+
+
+    /* Concepts for template parameter constraints. */
+    template <typename... T>
+    concept arithmetic = all<std::is_arithmetic, T...>::value;
+
+    template <typename... T>
+    concept floating_point = all<std::is_floating_point, T...>::value;
+
+    template <typename... T>
+    concept integral = all<std::is_integral, T...>::value;
+
+    /**
+     * True if each the specified dimension sizes is valid (i.e.
+     *   positive and no greater than PXSORT_MAX_DIMENSIONS).
+     * @tparam dims dimension sizes to check
+     */
+    template <int... dims>
+    concept valid_dimensions = is_valid_dimensions<dims...>::value;
+
     /* Forward declarations of library classes. */
+//    namespace map {
+//
+//        template <typename T, int m, int nPixels, typename S = T>
+//        requires arithmetic<T, S> && valid_dimensions<m, nPixels>
+//        class Map;
+//
+//    }
 
     class Image;
 
-    class Effect;
+    template <int cn> requires valid_dimensions<cn>
+    using Pixel = cv::Vec<float, cn>;
 
     class Sorter;
-    class PartialBubbleSort;
-    class PartialHeapify;
-    class BucketSort;
 
     class Segment;
-    class Rectangle;
-    class Asendorf;
+    class SegmentPixels;
 
-    class Segmentation;
-    class Grid;
-
-    class PixelMixer;
-    class PixelPredicate;
-    class PixelProjection;
-    class PixelComparator;
-
-    template<typename T, typename... ParamTypes>
-    class Parameterization;
-
-    template<typename T>
-    using Static = Parameterization<T>;
-
-    template<typename T>
-    using TimeVarying = Parameterization<T, double>;
-
-    template<typename T, size_t Dimension>
-    using Field = Parameterization<T, cv::Vec<float, Dimension>>;
-
-    template<typename T>
-    using pointer_traits_t = typename std::pointer_traits<T>::element_type;
+    class Map;
 
     /**
-     * Concept to test whether Derived_Ptr is a pointer to a type derived from
-     *   Base.
-     * @tparam Base The base class to test for.
-     * @tparam Derived_Ptr The pointer to the derived type.
+     * A per-channel coordinate transform.
+     * Has the form: (x, y, channel) -> (x', y'), where x' and y' are offset
+     *   coordinates at which to access the specified channel.
      */
-    template<typename Base, typename Derived_Ptr>
-    concept is_ptr_to_derived =
-            std::is_base_of<Base, pointer_traits_t<Derived_Ptr>>::value;
+//    using ChannelSkew = map::Map<int, 3, 2>;
+
+    /**
+     * A predicate on a pixel. Non-negative outputs are "true",
+     * and negative outputs are "false".
+     */
+//    template<int cn> requires valid_dimensions<cn>
+//    using PixelPredicate = map::Map<float, cn, 1>;
+
+    /* DSL Classes */
+
+//    template<typename T, size_t D>
+//    class Selector;
+
+//    using ChannelSelector = Selector<float, 3>;
 
     /* Library typedefs. */
-
-
-
-    /**
-     * Pixels are always points in the unit cube, [0, 1]^3.
-     */
-    typedef cv::Vec3f Pixel;
-
-    typedef std::pair<Segment, std::vector<Pixel>> SegmentPixels;
 
     /** Matrix of the form [S_1 S_2 S_3], where each S_i is a vector of the form
      *    (dx, dy) defining the offset within a Segment for retrieving the ith
      *    channel of a pixel.
-     *  This allows us to "skew" the channels of an image while applying
+     *  This allows us to "skew" the cn of an image while applying
      *    effects. How skew is interpreted depends on the specific Segment
      *    implementation that is used.
      */
-    typedef cv::Matx<int, 2, 3> ChannelSkew;
+//    typedef cv::Matx<int, 2, 3> ChannelSkew;
+
+//    typedef std::function<float(const Pixel&)>
+//            PixelProjection;
+//    typedef std::function<float(const Pixel&)>
+//            PixelPredicate;
+
+
+//    typedef std::function<std::pair<Pixel, Pixel>(const Pixel&, const Pixel&)>
+//            PixelMixer;
+//
+//    typedef std::function<float(const Pixel&, const Pixel&)> PixelComparator;
+
+//    typedef std::function<float(uint32_t, uint32_t)> CoordinateMap;
+
 
     /* Common enums/constants. */
-
-    /**
-     * Convenience function for creating a Skew with all 0 offsets.
-     * @return
-     */
-    inline ChannelSkew NO_SKEW() {
-        return {0, 0, 0,
-                0, 0, 0};
-    }
-
-    /** Indices of channels in Pixels by name. */
-    enum Channel {
-        RED = 0,
-        GREEN = 1,
-        BLUE = 2
-    };
 
     /**
      * Constrain the

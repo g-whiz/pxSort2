@@ -2,113 +2,84 @@
 #define PXSORT2_IMAGE_H
 
 #include "common.h"
-#include <memory>
-#include <opencv2/imgproc.hpp>
+
 
 class pxsort::Image {
 public:
-    /** Color spaces supported by the Image class. */
-    enum ColorSpace {
-        RGB = 0,
-        XYZ = 1,
-        Lab = 2,
-        Luv = 3,
-        YCrCb = 4,
-        HSV = 5,
-        HLS = 6
-    };
+    Image() = delete;
 
     /** Width of this image (in pixels). */
     const int width;
     /** Height of this image (in pixels). */
     const int height;
-    /** Color space of this image's pixels. */
-    const ColorSpace colorSpace;
+    /** Channels in each of this Image's pixels. */
+    const int depth;
+
+    Image(const Image& other);
 
     /**
-     * Construct a new Image using image data in the RGB32 (i.e. 0xffRRGGBB)
-     *   format. Alpha channel data is unused if present.
+     * Construct a new Image with uninitialized pixel pixelData.
      * @param width The width of the image (in pixels).
      * @param height The height of the image (in pixels).
-     * @param colorSpace The color space to use for this image's pixels.
-     * @param data Pointer to RGB32 pixel data of the input image.
+     * @param channels The number of channels in each of this Image's pixels.
      */
-    Image(int width,
-          int height,
-          ColorSpace colorSpace,
-          std::unique_ptr<uint8_t[]> data);
+    Image(int width, int height, int channels);
 
     /**
-     * Construct a new Image using image data in the RGB32 (i.e. 0xffRRGGBB)
-     *   format. Alpha channel data is unused if present.
+     * Construct a new Image with uninitialized pixel pixelData.
+     * WARNING: This constructor is unsafe!
+     * The given pixelData pointer is assumed to point to a float array with size
+     *   width * height * channels.
      * @param width The width of the image (in pixels).
      * @param height The height of the image (in pixels).
-     * @param colorSpace The color space to use for this image's pixels.
-     * @param data Pointer to RGB32 pixel data of the input image.
+     * @param channels The number of channels in each of this Image's pixels.
+     * @param data The *borrowed* pixel pixelData to initialize this image with.
+     * Must be of at least size (width * height * channels) with pixel pixelData
+     *   arranged in row-major form.
+     * i.e. Pixel (x, y) is at &pixelData[y * width * pixelDepth + x * pixelDepth], and channel
+     *      i of pixel (x, y) is at &pixelData[y * width * pixelDepth + x * pixelDepth + i]
      */
-    Image(int width,
-          int height,
-          ColorSpace colorSpace,
-          uint8_t *data);
+    Image(int width, int height, int channels, float *data);
 
     /**
-     * Returns a pointer to a copier of the data in this image, transformed
-     *   to the RGB32 (i.e. 0xffRRGGBB) format. The width and height of the
-     *   image in the returned data are the width and height of this Image.
-     * @return
+     * Returns a pointer to the pixel with coordinates (x, y) in this image.
+     * WARNING: bounds checking is only performed when compiled in debug mode.
+     * @param x An integer with 0 <= x < width.
+     * @param y An integer with 0 <= y < height.
+     * @return A pointer to a pixel with this->pixelDepth channels.
      */
-    std::unique_ptr<uint8_t[]> toRGB32();
+    [[nodiscard]]
+    inline float *ptr(int x, int y);
 
     /**
-     * Return the value of the specified channel from the Pixel at the
-     * specified coordinates.
-     * @param x
-     * @param y
-     * @param ch
-     * @return
+     * Returns a pointer to the pixel with coordinates (x, y) in this image.
+     * WARNING: bounds checking is only performed when compiled in debug mode.
+     * @param x An integer with 0 <= x < width.
+     * @param y An integer with 0 <= y < height.
+     * @return A pointer to a pixel with this->pixelDepth channels.
      */
-    float at(int x, int y, Channel ch);
+    [[nodiscard]]
+    inline const float *ptr(int x, int y) const;
 
     /**
-     * Return a pointer to the specified channel in the Pixel at the
-     * specified coordinates.
-     * @param x
-     * @param y
-     * @param ch
+     * Returns the value of channel cn for the pixel at coordinates (x, y).
+     * WARNING: bounds checking is only performed when compiled in debug mode.
+     * @param x An integer with 0 <= x < width.
+     * @param y An integer with 0 <= y < height.
+     * @param cn An integer with 0 <= cn < pixelDepth.
      * @return
      */
-    float *ptr(int x, int y, Channel ch);
+    [[nodiscard]]
+    inline float at(int x, int y, int cn) const;
 
 private:
-    /** Mat containing the underlying pixel data for this Image.
-     *  It has shape: (height, width, 3).
-     *  Components are single-precision floating point numbers, regardless
-     *  of color space. */
-    cv::Mat pixels;
+    const int row_stride;
 
-    /** Map pixels from their normal color space to the unit cube. */
-    void normalizePixels();
-
-    /** Map pixels from the unit cube to their normal color space. */
-    void denormalizePixels();
-
-    static constexpr cv::ColorConversionCodes fromRGB[] = {
-            cv::COLOR_RGB2XYZ,
-            cv::COLOR_RGB2Lab,
-            cv::COLOR_RGB2Luv,
-            cv::COLOR_RGB2YCrCb,
-            cv::COLOR_RGB2HSV,
-            cv::COLOR_RGB2HLS
-    };
-
-    static constexpr cv::ColorConversionCodes toRGB[] = {
-            cv::COLOR_XYZ2RGB,
-            cv::COLOR_Lab2RGB,
-            cv::COLOR_Luv2RGB,
-            cv::COLOR_YCrCb2RGB,
-            cv::COLOR_HSV2RGB,
-            cv::COLOR_HLS2RGB
-    };
+    /** Array containing the underlying pixel pixelData for this Image.
+     *  It has shape (width, height),
+     *     with element size channels * sizeof(float)
+     */
+    const std::unique_ptr<float[]> data;
 };
 
 #endif //PXSORT2_IMAGE_H
