@@ -218,7 +218,7 @@ public:
      * @return
      */
     [[nodiscard]]
-    size_t size() const;
+    uint32_t size() const;
 
     /**
      * Returns a (borrowed) pointer to the pixel at the given index.

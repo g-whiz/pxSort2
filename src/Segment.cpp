@@ -87,7 +87,7 @@ SegmentPixels pxsort::SegmentPixels::unrestricted() const {
             std::make_shared<Subarray>(0, nPixels)};
 }
 
-size_t pxsort::SegmentPixels::size() const {
+uint32_t pxsort::SegmentPixels::size() const {
     return view->size();
 }
 

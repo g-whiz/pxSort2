@@ -170,6 +170,8 @@ namespace pxsort {
         return first < restMin ? first : restMin;
     }
 
+
+
     template<typename T>
     T max(T a, T b) {
         return a >= b ? a : b;
