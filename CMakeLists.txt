@@ -15,8 +15,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #find_package(ComputeCpp)
 
 find_package(OpenMP REQUIRED)
-find_package(Boost 1.74 REQUIRED)
-find_package(OpenCV REQUIRED core imgproc)
+#find_package(Boost 1.74 REQUIRED)
+#find_package(OpenCV REQUIRED core imgproc)
 
 #add_subdirectory(extern/pybind11)
 

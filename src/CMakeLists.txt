@@ -1,6 +1,3 @@
-
-
-
 add_library(pxsort
     common.h
     Sorter.h
@@ -15,4 +12,4 @@ add_library(pxsort
 
 set_property(TARGET pxsort PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_include_directories(pxsort PUBLIC ${CMAKE_SOURCE_DIR}/src)
-target_link_libraries(pxsort OpenMP::OpenMP_CXX ${OpenCV_LIBS})
+target_link_libraries(pxsort OpenMP::OpenMP_CXX)
