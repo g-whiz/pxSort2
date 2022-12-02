@@ -1,4 +1,5 @@
 #include <unordered_set>
+#include <cassert>
 #include "Segment.h"
 #include "Image.h"
 
@@ -99,8 +100,8 @@ float *pxsort::SegmentPixels::at(size_t viewIdx) const {
 
 SegmentPixels pxsort::SegmentPixels::deepCopy() const {
     std::shared_ptr<float[]> dataCopy(new float[nPixels * pixelDepth]);
-    std::memcpy(dataCopy.get(), this->pixelData.get(),
-                nPixels * pixelDepth * sizeof(float));
+    std::copy_n(this->pixelData.get(), nPixels * pixelDepth, dataCopy.get());
+
 
 
     return {nPixels, pixelDepth, std::move(dataCopy), view};
@@ -238,10 +239,9 @@ void Segment::putPixels(Image &img,
 
 template <>
 struct std::hash<Segment::Coordinates> {
-    constexpr
     std::size_t operator()(Segment::Coordinates const& coords) const noexcept {
-        uint64 x = std::get<0>(coords);
-        uint64 y = std::get<1>(coords);
+        uint64_t x = std::get<0>(coords);
+        uint64_t y = std::get<1>(coords);
         return std::hash<uint64_t>()(x | (y << 32));
     }
 };

@@ -1,7 +1,8 @@
+#include <cassert>
+#include <cmath>
+#include <vector>
 #include "Sorter.h"
 #include "Segment.h"
-#include "PixelMixer.h"
-#include "PixelProjection.h"
 
 using namespace pxsort;
 
@@ -93,8 +94,7 @@ class Heapify : public Sorter::SorterImpl {
 
 public:
     Heapify(Map  pixelProjection,
-            Map  pixelMixer,
-            std::optional<uint32_t> nIters)
+            Map  pixelMixer)
     : project(std::move(pixelProjection)),
       mix(std::move(pixelMixer)) {}
 
@@ -219,7 +219,60 @@ SegmentPixels Bubble::operator()(
         }
         n = newN;
         passes++;
-    } while (n >= 0 && passes);
+    } while (n > 1 || passes >= maxPasses);
 
     return result;
+}
+
+Sorter pxsort::Sorter::bucketSort(
+        const Map &pixelProjection,
+        const Map &pixelMixer,
+        uint32_t nBuckets) {
+    assert(2 * pixelProjection.inDim == pixelMixer.inDim);
+    assert(pixelProjection.outDim == 1);
+    assert(pixelMixer.inDim == pixelMixer.outDim);
+
+    auto depth = pixelProjection.inDim;
+    return {
+        depth,
+        std::make_shared<BucketSort>(pixelProjection, pixelMixer, nBuckets)};
+}
+
+Sorter pxsort::Sorter::heapify(const Map &pixelProjection,
+                               const Map &pixelMixer) {
+    assert(2 * pixelProjection.inDim == pixelMixer.inDim);
+    assert(pixelProjection.outDim == 1);
+    assert(pixelMixer.inDim == pixelMixer.outDim);
+
+    auto depth = pixelProjection.inDim;
+    return {
+            depth,
+            std::make_shared<Heapify>(pixelProjection, pixelMixer)};
+}
+
+Sorter pxsort::Sorter::bubble(const Map &pixelProjection, const Map &pixelMixer, double fraction) {
+    assert(2 * pixelProjection.inDim == pixelMixer.inDim);
+    assert(pixelProjection.outDim == 1);
+    assert(pixelMixer.inDim == pixelMixer.outDim);
+
+    auto depth = pixelProjection.inDim;
+    return {
+            depth,
+            std::make_shared<Bubble>(pixelProjection, pixelMixer, fraction)};
+}
+
+pxsort::Sorter::Sorter(uint32_t pixelDepth, std::shared_ptr<SorterImpl> pImpl)
+  : pixelDepth(pixelDepth), pImpl(std::move(pImpl)) {}
+
+SegmentPixels pxsort::Sorter::operator()(const SegmentPixels &pixels) const {
+    assert(pixels.pixelDepth == this->pixelDepth);
+    return (*pImpl)(pixels, pixels);
+}
+
+SegmentPixels pxsort::Sorter::operator()(
+        const SegmentPixels &basePixels,
+        const SegmentPixels &skewedPixels) const {
+    assert(basePixels.pixelDepth == this->pixelDepth);
+    assert(skewedPixels.pixelDepth == this->pixelDepth);
+    return (*pImpl)(basePixels, skewedPixels);
 }

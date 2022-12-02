@@ -160,58 +160,58 @@ private:
 Map::Map(std::function<void(float *, uint32_t, float *, uint32_t)> f,
          uint32_t in_dim, uint32_t out_dim)
     : pImpl(std::make_shared<FuncObjImpl>(f, in_dim, out_dim)),
-      m(in_dim), n(out_dim){}
+      inDim(in_dim), outDim(out_dim){}
 
 pxsort::Map::Map(void(*f)(float*, uint32_t, float*, uint32_t), uint32_t in_dim, uint32_t out_dim)
         : pImpl(std::make_shared<FuncPtrImpl>(f, in_dim, out_dim)),
-          m(in_dim), n(out_dim){}
+          inDim(in_dim), outDim(out_dim){}
 
 pxsort::Map::Map(std::shared_ptr<MapImpl> pImpl, uint32_t in_dim, uint32_t out_dim)
-    : pImpl(std::move(pImpl)), m(in_dim), n(out_dim) {}
+    : pImpl(std::move(pImpl)), inDim(in_dim), outDim(out_dim) {}
 
 std::vector<float> pxsort::Map::operator()(const std::vector<float> &x) const {
 #ifdef PXSORT_DEBUG
     // skip this check in non-debug builds since it will be executed potentially
     // millions of times
-    if (x.size() != m)
+    if (x.size() != inDim)
         throw std::invalid_argument(
                 "pxsort::Map: dimension mismatch in given vector");
 #endif
     auto in_ptr = const_cast<float *>(x.data());
-    std::vector<float> y(n);
+    std::vector<float> y(outDim);
     auto out_ptr = y.data();
     (*pImpl)(in_ptr, out_ptr);
     return y;
 }
 
 Map pxsort::Map::operator<<(const Map &that) const {
-    if (that.n != this->m)
+    if (that.outDim != this->inDim)
         throw std::invalid_argument(
-                "pxsort::Map: nPixels does not match this Map's m ");
+                "pxsort::Map: nPixels does not match this Map's inDim ");
 
     auto compPImpl = std::make_shared<CompositionImpl>(this->pImpl, that.pImpl);
-    return {compPImpl, that.m, this->n};
+    return {compPImpl, that.inDim, this->outDim};
 }
 
 Map pxsort::Map::operator|(const Map &that) const {
     auto catPImpl =
             std::make_shared<ConcatenationImpl>(this->pImpl, that.pImpl);
-    return {catPImpl, this->m + that.m, this->n + that.n};
+    return {catPImpl, this->inDim + that.inDim, this->outDim + that.outDim};
 }
 
 Map pxsort::Map::operator^(const Map &that) const {
-    if (this->m != that.m)
+    if (this->inDim != that.inDim)
         throw std::invalid_argument(
-                "pxsort::Map: m does not match this Map's m ");
+                "pxsort::Map: inDim does not match this Map's inDim ");
 
     auto forkPImpl = std::make_shared<ForkImpl>(this->pImpl, that.pImpl);
-    return {forkPImpl, this->m, this->n + that.n};
+    return {forkPImpl, this->inDim, this->outDim + that.outDim};
 }
 
 Map pxsort::Map::operator[](int i) const {
-    int safe_i = PXSORT_MODULO(i, n);
+    int safe_i = PXSORT_MODULO(i, outDim);
 
-    return {std::make_shared<ProjectionImpl>(pImpl, safe_i), m, 1};
+    return {std::make_shared<ProjectionImpl>(pImpl, safe_i), inDim, 1};
 }
 
 Map pxsort::Map::concatenate(const std::vector<Map> &maps) {
@@ -219,8 +219,8 @@ Map pxsort::Map::concatenate(const std::vector<Map> &maps) {
     uint32_t in_dim = 0;
     uint32_t out_dim = 0;
     for (int i = 0; i < maps.size(); i++) {
-        in_dim += maps[i].m;
-        out_dim += maps[i].n;
+        in_dim += maps[i].inDim;
+        out_dim += maps[i].outDim;
         impls[i] = maps[i].pImpl;
     }
 

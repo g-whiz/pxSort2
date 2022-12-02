@@ -38,7 +38,7 @@ namespace pxsort {
      */
     template<typename T>
     inline T clamp(T x, T lo, T hi) {
-        return MIN(hi, MAX(lo, x));
+        return std::min(hi, std::max(lo, x));
     }
 
     template<typename T>

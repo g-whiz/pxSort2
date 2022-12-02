@@ -1,10 +1,11 @@
 #ifndef PXSORT2_MAP_H
 #define PXSORT2_MAP_H
 
+#include <functional>
 #include "common.h"
 
 /**
- * A map from R^m to R^nPixels.
+ * A map from R^inDim to R^nPixels.
  */
 class pxsort::Map {
 public:
@@ -13,12 +14,12 @@ public:
     /**
      * The dimension of this Map's input.
      */
-    const uint32_t m;
+    const uint32_t inDim;
 
     /**
      * The dimension of this Map's output.
      */
-    const uint32_t n;
+    const uint32_t outDim;
 
     /**
      * Copy constructor.
@@ -68,7 +69,7 @@ public:
      * Function composition operator.
      * Let f: B -> C, g: A -> B.
      * Then (f << g): A -> C.
-     * @param that A Map whose nPixels equals this Map's m
+     * @param that A Map whose nPixels equals this Map's inDim
      * @throws std::invalid_argument If the dimension constraints are violated.
      * @return A Map that is the composition of the given Map and this Map.
      */
@@ -91,7 +92,7 @@ public:
     static Map concatenate(const std::vector<Map> &maps);
 
     /**
-     * Returns a Map with m == in_dim, n == c.size() that always evaluates to
+     * Returns a Map with inDim == in_dim, n == c.size() that always evaluates to
      * the values contained in c.
      * This can be used to achieve currying (i.e. parameter binding).
      * @param c The constant values for the resulting map to evaluate to.
@@ -105,7 +106,7 @@ public:
      * Then (f ^ g): A -> B x C
      * i.e. the resulting map returns the concatenated result of f and g when
      *      evaluated on the same input
-     * @param that A Map whose m equals this Map's m
+     * @param that A Map whose inDim equals this Map's inDim
      * @throws std::invalid_argument If the dimension constraints are violated.
      * @return
      */
@@ -122,8 +123,8 @@ public:
     /**
      * Invoke this Map on the given vector.
      * WARNING: runtime behaviour is not guaranteed if the given vector's size
-     *   does not match this Map's m.
-     * @param x A vector<float> with size == m.
+     *   does not match this Map's inDim.
+     * @param x A vector<float> with size == inDim.
      * @return The resulting vector<float> with size() == nPixels
      */
     std::vector<float> operator()(const std::vector<float>& x) const;
@@ -134,7 +135,7 @@ public:
       *     ensuring that the provided arrays are valid, and properly
       *     initialized.
       * @param in A C array containing the input to this Map.
-      *     Assumed to be allocated and initialized with length m.
+      *     Assumed to be allocated and initialized with length inDim.
       * @param out A C array to return this Map's output via.
       *     Assumed to be allocated with length nPixels.
       */

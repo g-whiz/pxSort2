@@ -1,3 +1,4 @@
+#include <cassert>
 #include "Image.h"
 
 using namespace pxsort;
@@ -12,8 +13,7 @@ Image::Image(int width, int height, int channels)
 
 Image::Image(int width, int height, int channels, float *src_data)
 : Image(width, height, channels) {
-    std::memcpy(&this->data[0], src_data,
-                width * height * channels * sizeof(float));
+    std::copy_n(src_data, width * height * channels, &this->data[0]);
 }
 
 float *Image::ptr(int x, int y) {
@@ -24,13 +24,13 @@ float *Image::ptr(int x, int y) {
     return &data[y * row_stride + x * depth];
 }
 
-float Image::at(int x, int y, int cn) const {
+inline float Image::at(int x, int y, int cn) const {
 #ifdef PXSORT_DEBUG
     assert(0 <= cn && cn < depth);
 #endif // PXSORT_DEBUG
     return ptr(x, y)[cn];
 }
 
-const float *Image::ptr(int x, int y) const {
+inline const float *Image::ptr(int x, int y) const {
     return ((Image *) this)->ptr(x, y);
 }

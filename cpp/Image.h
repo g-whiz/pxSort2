@@ -3,7 +3,6 @@
 
 #include "common.h"
 
-
 class pxsort::Image {
 public:
     Image() = delete;
