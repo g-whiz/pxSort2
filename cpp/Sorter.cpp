@@ -264,11 +264,6 @@ Sorter pxsort::Sorter::bubble(const Map &pixelProjection, const Map &pixelMixer,
 pxsort::Sorter::Sorter(uint32_t pixelDepth, std::shared_ptr<SorterImpl> pImpl)
   : pixelDepth(pixelDepth), pImpl(std::move(pImpl)) {}
 
-SegmentPixels pxsort::Sorter::operator()(const SegmentPixels &pixels) const {
-    assert(pixels.pixelDepth == this->pixelDepth);
-    return (*pImpl)(pixels, pixels);
-}
-
 SegmentPixels pxsort::Sorter::operator()(
         const SegmentPixels &basePixels,
         const SegmentPixels &skewedPixels) const {

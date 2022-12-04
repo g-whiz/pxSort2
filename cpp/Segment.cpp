@@ -42,8 +42,8 @@ SegmentPixels::SegmentPixels(uint32_t nPixels, uint32_t depth)
     assert(depth > 0);
 }
 
-SegmentPixels SegmentPixels::restrict(const Map& startTest,
-                                      const Map& endTest) const {
+SegmentPixels SegmentPixels::asdfRestriction(const Map& startTest,
+                                             const Map& endTest) const {
     auto start = 0;
     for (; start < nPixels; start++) {
         float res;
@@ -71,7 +71,7 @@ pxsort::SegmentPixels::SegmentPixels(size_t nPixels, size_t depth,
     : nPixels(nPixels), pixelDepth(depth),
     pixelData(std::move(pixelData)), view(std::move(view)) {}
 
-SegmentPixels pxsort::SegmentPixels::restrict(const Map &filterTest) const {
+SegmentPixels pxsort::SegmentPixels::filterRestriction(const Map &filterTest) const {
     std::vector<size_t> indices;
     for(int idx = 0; idx < nPixels; idx++) {
         float res;
@@ -211,14 +211,14 @@ SegmentPixels Segment::getPixels(const Image &img,
     return segPx;
 }
 
-size_t Segment::size() const {
+uint32_t Segment::size() const {
     return pxCoords.size();
 }
 
 void Segment::putPixels(Image &img,
                         Segment::Traversal traversal,
                         const SegmentPixels &segPx) const {
-    SegmentPixels fullPx = segPx.unrestricted();
+    const SegmentPixels fullPx = segPx.unrestricted();
 #ifdef PXSORT_DEBUG
     assert(segPx.pixelDepth == img.depth);
     assert(size() == fullPx.size());
@@ -228,12 +228,10 @@ void Segment::putPixels(Image &img,
         auto idx = getIndexForTraversal(i, traversal);
         const auto &[x, y] = pxCoords[idx];
 
-        float *segPixel = segPx.at(idx);
+        float *segPixel = fullPx.at(idx);
         float *imgPixel = img.ptr(x, y);
 
-        for (int cn = 0; cn < img.depth; cn++) {
-            imgPixel[cn] = segPixel[cn];
-        }
+        std::copy_n(segPixel, img.depth, imgPixel);
     }
 }
 
@@ -350,6 +348,10 @@ Segment Segment::filter(const Map &coordPred) const {
     }
 
     return {filteredCoords, key};
+}
+
+Segment::Coordinates Segment::operator[](uint32_t idx) const {
+    return pxCoords[PXSORT_MODULO(idx, this->size())];
 }
 
 
