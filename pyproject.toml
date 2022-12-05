@@ -1,0 +1,38 @@
+[project]
+name = "pxsort"
+version = "0.0.1"
+authors = [
+  { name="George Gianacopoulos", email="ggianacopoulos@proton.me" },
+]
+description = """
+    A toolkit for producing glitch effects using pixel-sorting and
+    similar techniques.
+"""
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Private :: Do Not Upload",
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "License :: Free for non-commercial use",
+    "Operating System :: OS Independent",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/g-whiz/pxsort2"
+"Bug Tracker" = "https://github.com/g-whiz/pxsort2/issues"
+
+[build-system]
+requires = [
+    "setuptools",
+    "scikit-build>=0.13",
+    "cmake",
+    "ninja",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,8 +1,4 @@
 cmake_minimum_required(VERSION 3.18)
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/python/pxsort
-        DESTINATION ${CMAKE_INSTALL_DIR})
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/tests
-        DESTINATION ${CMAKE_INSTALL_DIR})
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/examples
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/src/python
         DESTINATION ${CMAKE_INSTALL_DIR})

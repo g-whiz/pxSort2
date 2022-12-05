@@ -7,8 +7,9 @@ message(STATUS "${PROJECT_NAME} version: ${PROJECT_VERSION}")
 
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 
-string(TOLOWER ${CMAKE_BUILD_TYPE} BUILD_TYPE_LC)
-set(CMAKE_INSTALL_DIR "${CMAKE_SOURCE_DIR}/cmake-install-${BUILD_TYPE_LC}")
+if(NOT DEFINED CMAKE_INSTALL_DIR)
+    set(CMAKE_INSTALL_DIR "${CMAKE_SOURCE_DIR}/dist")
+endif()
 message(STATUS "install location: ${CMAKE_INSTALL_DIR}")
 
 if (CMAKE_BUILD_TYPE STREQUAL Debug)

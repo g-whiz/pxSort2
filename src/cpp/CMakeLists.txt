@@ -18,6 +18,6 @@ set_target_properties(${python_module} PROPERTIES
         OUTPUT_NAME "_native"
         SUFFIX ".so")
 
-set(PYTHON_MODULE_INSTALL_DIR "${CMAKE_INSTALL_DIR}/pxsort")
+set(PYTHON_MODULE_INSTALL_DIR "${CMAKE_INSTALL_DIR}/python")
 file(MAKE_DIRECTORY "${PYTHON_INSTALL_DIR}")
 install(TARGETS ${python_module} DESTINATION ${PYTHON_MODULE_INSTALL_DIR})
