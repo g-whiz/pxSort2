@@ -34,4 +34,4 @@ if(CHECK_TYPE)
 endif()
 
 #find_package(OpenMP REQUIRED)
-add_subdirectory(cpp)
+add_subdirectory(src/cpp)

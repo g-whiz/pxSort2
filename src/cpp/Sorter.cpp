@@ -8,7 +8,7 @@ using namespace pxsort;
 
 class Sorter::SorterImpl {
 public:
-    virtual ~SorterImpl() = 0;
+    virtual ~SorterImpl() = default;
 
     virtual SegmentPixels operator()(
             const SegmentPixels& base,
@@ -29,6 +29,8 @@ public:
       : projectPixel(pixelProjection),
         mixPixels(pixelMixer),
         nBuckets(nBuckets){}
+
+    ~BucketSort() override = default;
 
     SegmentPixels operator()(
             const SegmentPixels& base,
@@ -97,6 +99,8 @@ public:
             Map  pixelMixer)
     : project(std::move(pixelProjection)),
       mix(std::move(pixelMixer)) {}
+
+    ~Heapify() override = default;
 
     SegmentPixels operator()(
             const SegmentPixels &base,
@@ -179,6 +183,8 @@ public:
     : project(std::move(pixelProjection)),
       mix(std::move(pixelMixer)),
       fraction(clamp<float>(fraction, 0.0, 1.0)) {}
+
+    ~Bubble() override = default;
 
     SegmentPixels operator()(
             const SegmentPixels &base,

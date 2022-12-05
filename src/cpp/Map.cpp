@@ -17,7 +17,7 @@ public:
     virtual
     void operator()(float *in, float *out) const = 0;
 
-    virtual ~MapImpl() = 0;
+    virtual ~MapImpl() = default;
 };
 
 class FuncPtrImpl : public Map::MapImpl {
@@ -29,6 +29,8 @@ public:
 
     FuncPtrImpl(void(*f_ptr)(float*, uint32_t, float*, uint32_t), uint32_t in_dim, uint32_t out_dim)
         : Map::MapImpl(in_dim, out_dim), f(f_ptr) {}
+
+    ~FuncPtrImpl() override = default;
 
     inline
     void operator()(float *in, float *out) const override {
@@ -47,6 +49,8 @@ public:
             uint32_t in_dim, uint32_t out_dim)
         : Map::MapImpl(in_dim, out_dim), f(std::move(f_obj)) {}
 
+    ~FuncObjImpl() override = default;
+
     inline
     void operator()(float *in, float *out) const override {
         f(in, in_dim, out, out_dim);
@@ -59,6 +63,8 @@ class CompositionImpl : public Map::MapImpl {
 
 public:
     CompositionImpl() = delete;
+
+    ~CompositionImpl() override = default;
 
     CompositionImpl(std::shared_ptr<MapImpl> f, std::shared_ptr<MapImpl> g)
         : Map::MapImpl(g->in_dim, g->out_dim),
@@ -78,6 +84,8 @@ public:
     using ImplPtr = std::shared_ptr<MapImpl>;
 
     ConcatenationImpl() = delete;
+
+    ~ConcatenationImpl() override = default;
 
     ConcatenationImpl(ImplPtr f, ImplPtr g)
         : Map::MapImpl(f->in_dim + g->in_dim,
@@ -111,6 +119,8 @@ class ForkImpl : public Map::MapImpl {
 public:
     ForkImpl() = delete;
 
+    ~ForkImpl() override = default;
+
     ForkImpl(std::shared_ptr<MapImpl> f, std::shared_ptr<MapImpl> g)
         : Map::MapImpl(f->in_dim, f->out_dim + g->out_dim),
           f(std::move(f)), g(std::move(g)) {}
@@ -129,6 +139,8 @@ class ProjectionImpl : public Map::MapImpl {
 public:
     ProjectionImpl() = delete;
 
+    ~ProjectionImpl() override = default;
+
     ProjectionImpl(std::shared_ptr<MapImpl> f, int i)
         : Map::MapImpl(f->in_dim, 1), f(std::move(f)), i(i) {}
 
@@ -145,6 +157,8 @@ class ConstantImpl : public Map::MapImpl {
 
 public:
     ConstantImpl() = delete;
+
+    ~ConstantImpl() override = default;
 
     ConstantImpl(std::vector<float> values, uint32_t in_dim)
       : Map::MapImpl(in_dim, values.size()), values(std::move(values)) {}

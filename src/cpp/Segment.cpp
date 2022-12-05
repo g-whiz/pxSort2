@@ -6,7 +6,7 @@
 using namespace pxsort;
 
 struct SegmentPixels::View {
-    virtual ~View() = 0;
+    virtual ~View() = default;
 
     virtual size_t operator[](size_t idx) const = 0;
     [[nodiscard]]
@@ -16,6 +16,8 @@ struct SegmentPixels::View {
 struct Subarray : public SegmentPixels::View {
     const size_t startIdx;
     const size_t length;
+
+    ~Subarray() override = default;
 
     Subarray(size_t startIdx, size_t length)
        : startIdx(startIdx), length(length) {}
@@ -27,6 +29,8 @@ private:
 
 struct Filter : public SegmentPixels::View {
     const std::vector<size_t> indices;
+
+    ~Filter() override = default;
 
     Filter(std::vector<size_t> indices) : indices(std::move(indices)) {}
 
@@ -350,7 +354,7 @@ Segment Segment::filter(const Map &coordPred) const {
     return {filteredCoords, key};
 }
 
-Segment::Coordinates Segment::operator[](uint32_t idx) const {
+Segment::Coordinates Segment::operator[](int idx) const {
     return pxCoords[PXSORT_MODULO(idx, this->size())];
 }
 

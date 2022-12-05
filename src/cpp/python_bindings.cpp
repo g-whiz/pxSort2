@@ -1,5 +1,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/numpy.h>
 
 #include "Image.h"
 #include "Map.h"
@@ -18,13 +19,13 @@ void bindSegment(py::module_ &m);
 void bindSegmentPixels(py::module_ &m);
 void bindSorter(py::module_ &m);
 
-PYBIND11_MODULE(pxsort, m) {
+PYBIND11_MODULE(_native, m) {
     // todo: complete doc
     m.doc() = R"pbdoc(
         PxSort Python bindings
         ----------------------
 
-        .. currentmodule:: pxsort
+        .. currentmodule:: _pxsort
 
         ..autosummary::
             :toctree: _generate
@@ -98,22 +99,27 @@ Image createImageFromPyBuffer(const py::buffer& buf) {
     }
 }
 
+py::buffer_info imageBuffer(Image &img) {
+    return {
+        img.ptr(0, 0),
+        sizeof(float),
+        py::format_descriptor<float>::format(),
+        3,
+        {img.width, img.height, img.depth},
+        {sizeof(float) * img.depth,
+         sizeof(float) * img.width * img.depth,
+         sizeof(float)}
+    };
+}
+
 void bindImage(py::module_ &m) {
-    py::class_<Image>(m, "Image")
+    py::class_<Image>(m, "Image", py::buffer_protocol())
             .def(py::init<uint32_t, uint32_t, uint32_t>())
             .def(py::init(&createImageFromPyBuffer))
-            .def_buffer([](Image &img) -> py::buffer_info {
-                return {
-                    img.ptr(0, 0),
-                    sizeof(float),
-                    py::format_descriptor<float>::format(),
-                    3,
-                    {img.width, img.height, img.depth},
-                    {sizeof(float) * img.depth,
-                     sizeof(float) * img.width * img.depth,
-                     sizeof(float)}
-                };
-            });
+            .def("__getitem__", &Image::at)
+            .def_buffer(&imageBuffer)
+            .def("__array__",
+                 [](Image &img) {return py::array(imageBuffer(img));});
 }
 
 void bindMap(py::module_ &m) {
