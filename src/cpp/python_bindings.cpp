@@ -47,7 +47,7 @@ PYBIND11_MODULE(_native, m) {
 }
 
 
-Image createImageFromPyBuffer(const py::buffer& buf) {
+Image pyBufferToImage(const py::buffer& buf) {
     /* Request a buffer descriptor from Python */
     py::buffer_info info = buf.request();
 
@@ -115,10 +115,16 @@ py::buffer_info imageBuffer(Image &img) {
 void bindImage(py::module_ &m) {
     py::class_<Image>(m, "Image", py::buffer_protocol())
             .def(py::init<uint32_t, uint32_t, uint32_t>())
-            .def(py::init(&createImageFromPyBuffer))
+            .def(py::init(&pyBufferToImage))
             .def("__getitem__", &Image::at)
             .def_buffer(&imageBuffer)
+            .def("shape",
+                 [](Image &img) -> std::tuple<uint32_t, uint32_t, uint32_t> {
+                return {img.width, img.height, img.depth};
+            })
             .def("__array__",
+                 [](Image &img) {return py::array(imageBuffer(img));})
+            .def("A",
                  [](Image &img) {return py::array(imageBuffer(img));});
 }
 
@@ -154,6 +160,7 @@ void bindSegment(py::module_ &m) {
     py::class_<Segment>(m, "Segment")
             .def(py::init<uint32_t, uint32_t, uint32_t, uint32_t>())
             .def(py::init<std::vector<Segment::Coordinates>>())
+            .def("get_coordinates", &Segment::getCoordinates)
             .def("get_pixels", &Segment::getPixels)
             .def("put_pixels", &Segment::putPixels)
             .def("__sub__", &Segment::operator-)
@@ -165,12 +172,63 @@ void bindSegment(py::module_ &m) {
             .def("__getitem__", &Segment::operator[]);
 }
 
+
+SegmentPixels pyBufferToSegmentPixels(const py::buffer& buf) {
+    /* Request a buffer descriptor from Python */
+    py::buffer_info info = buf.request();
+
+    /* Some basic validation checks ... */
+    if (info.format != py::format_descriptor<float>::format())
+        throw std::runtime_error("Incompatible format: expected a "
+                                 "single-precision float array!");
+
+    if (info.ndim != 2)
+        throw std::runtime_error("Incompatible buffer dimension: requires a 2d "
+                                 "array (i.e. an array of pixels).");
+
+    if (info.shape[1] > IMAGE_MAX_DEPTH)
+        throw std::runtime_error("Incompatible buffer shape: pixels may not "
+                                 "have more than "
+                                 MACRO_STRINGIFY(IMAGE_MAX_DEPTH) " channels.");
+
+    auto len = info.shape[0];
+    auto depth = info.shape[1];
+
+    auto pxStride = info.strides[0] / sizeof(float);
+    auto cnStride = info.strides[1] / sizeof(float);
+
+    SegmentPixels segPx(len, depth);
+    auto data = static_cast<float *>(info.ptr);
+    for(int i = 0; i < len; i++)
+        for (int cn = 0; cn < depth; cn++)
+            segPx.at(i)[cn] = data[i * pxStride + cn * cnStride];
+
+    return segPx;
+}
+
+py::buffer_info segmentPixelsBuffer(const SegmentPixels &segPx) {
+    auto spu = segPx.unrestricted();
+    return {
+            spu.at(0),
+            sizeof(float),
+            py::format_descriptor<float>::format(),
+            2,
+            {spu.size(), spu.pixelDepth},
+            {sizeof(float) * spu.pixelDepth,
+             sizeof(float)}
+    };
+}
+
 void bindSegmentPixels(py::module_ &m) {
-    py::class_<SegmentPixels>(m, "SegmentPixels")
+    py::class_<SegmentPixels>(m, "SegmentPixels", py::buffer_protocol())
+            .def(py::init(&pyBufferToSegmentPixels))
             .def("asdf_restriction", &SegmentPixels::asdfRestriction)
             .def("filter_restriction", &SegmentPixels::filterRestriction)
             .def("unrestricted", &SegmentPixels::unrestricted)
-            .def("__deepcopy__", &SegmentPixels::deepCopy);
+            .def("__deepcopy__", &SegmentPixels::deepCopy)
+            .def_buffer(&segmentPixelsBuffer)
+            .def("__array__",[](SegmentPixels &sp){
+                return py::array(segmentPixelsBuffer(sp));});
 }
 
 void bindSorter(py::module_ &m) {

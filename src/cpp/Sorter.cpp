@@ -45,11 +45,11 @@ uint32_t BucketSort::bucket(float *pixel) const {
     float pxProj;
     projectPixel(pixel, &pxProj);
 
-    double step = 1.0 / static_cast<double>(nBuckets);
+    double const step = 1.0 / static_cast<double>(nBuckets);
 
-    auto bucket = clamp<int>(static_cast<int>(pxProj / step),
-                             0,
-                             static_cast<int>(nBuckets) - 1);
+    auto n_steps = static_cast<int>(floor(pxProj / step));
+    auto bucket = clamp<int>(n_steps, 0, nBuckets - 1);
+
     return bucket;
 }
 
@@ -74,17 +74,17 @@ SegmentPixels BucketSort::operator()(
     auto result = base.deepCopy();
     float inPx[2 * nChannels];
     float outPx[2 * nChannels];
-    for (int iRes = 0; iRes < nPixels; iRes++) {
-        auto bkt = bucket(skewed.at(iRes));
-        auto iSkew = indices[bkt];
+    for (int iBase = 0; iBase < nPixels; iBase++) {
+        auto bkt = bucket(skewed.at(iBase));
+        uint32_t const iSorted = indices[bkt];
         indices[bkt]++;
 
-        std::copy_n(base.at(iRes), nChannels, inPx);
-        std::copy_n(skewed.at(iSkew), nChannels, &inPx[nChannels]);
+        std::copy_n(result.at(iSorted), nChannels, inPx);
+        std::copy_n(skewed.at(iBase), nChannels, &inPx[nChannels]);
 
         mixPixels(inPx, outPx);
 
-        std::copy_n(outPx, nChannels, result.at(iRes));
+        std::copy_n(outPx, nChannels, result.at(iSorted));
     }
 
     return result;
@@ -114,10 +114,10 @@ private:
 SegmentPixels Heapify::operator()(
         const SegmentPixels &base,
         const SegmentPixels &skewed) const {
-    auto nPixels = base.size();
-    auto nChannels = base.pixelDepth;
+    long nPixels = base.size();
+    long nChannels = base.pixelDepth;
 
-    SegmentPixels result = base.deepCopy();
+    SegmentPixels result = skewed.deepCopy();
     for (long i = (nPixels / 2) - 1; i >= 0; i--) {
         // Perform bubble-down pass for a single element of the heap.
         // Note: the outer if statements in the loop are just bounds checks
@@ -134,11 +134,11 @@ SegmentPixels Heapify::operator()(
 
             float leftProj = -INFINITY;
             if (left < nPixels)
-                project(skewed.at(left), &leftProj);
+                project(result.at(left), &leftProj);
 
             float rightProj = -INFINITY;
             if (right < nPixels)
-                project(skewed.at(right), &rightProj);
+                project(result.at(right), &rightProj);
 
             auto largest = rootProj > leftProj ? (rootProj > rightProj ? root
                                                                        : right)
@@ -152,7 +152,7 @@ SegmentPixels Heapify::operator()(
             float outPx[2 * nChannels];
             if (largest != root) {
                 std::copy_n(result.at(root), nChannels, inPx);
-                std::copy_n(skewed.at(largest), nChannels, &inPx[nChannels]);
+                std::copy_n(result.at(largest), nChannels, &inPx[nChannels]);
 
                 mix(inPx, outPx);
 
@@ -256,7 +256,9 @@ Sorter pxsort::Sorter::heapify(const Map &pixelProjection,
             std::make_shared<Heapify>(pixelProjection, pixelMixer)};
 }
 
-Sorter pxsort::Sorter::bubble(const Map &pixelProjection, const Map &pixelMixer, double fraction) {
+Sorter pxsort::Sorter::bubble(const Map &pixelProjection,
+                              const Map &pixelMixer,
+                              double fraction) {
     assert(2 * pixelProjection.inDim == pixelMixer.inDim);
     assert(pixelProjection.outDim == 1);
     assert(pixelMixer.inDim == pixelMixer.outDim);

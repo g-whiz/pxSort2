@@ -20,6 +20,11 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research"
 ]
+dependencies = [
+    "numpy",
+    "numba",
+    "opencv-python"
+]
 
 [project.urls]
 "Homepage" = "https://github.com/g-whiz/pxsort2"

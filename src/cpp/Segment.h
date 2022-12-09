@@ -131,6 +131,8 @@ public:
 
     Coordinates operator[](int idx) const;
 
+    std::vector<Coordinates> & getCoordinates();
+
 private:
     Segment(std::vector<Coordinates>, const std::optional<Map> &);
 
@@ -142,7 +144,7 @@ private:
     int getBTBFIndex(int idx) const;
 
 
-    const std::vector<Coordinates> pxCoords;
+    std::vector<Coordinates> pxCoords;
 
     // optional key function for ordering pixel coordinates
     const std::optional<Map> key;
@@ -158,7 +160,7 @@ public:
     struct View;
 
     // # of channels in each pixel
-    const uint32_t pixelDepth;
+    const int pixelDepth;
 
     SegmentPixels() = delete;
 
@@ -210,10 +212,26 @@ public:
     [[nodiscard]]
     SegmentPixels filterRestriction(const Map &filterTest) const;
 
+    /**
+     * Returns a (shallow) copy of this SegmentPixels that restricts indexing
+     * of the backing array to a filtered subset defined by a list of indices.
+     * @param indices
+     * @return
+     */
+    SegmentPixels restrictToIndices(const std::vector<int> &indices) const;
+
 
     /**
-     * Returns a (shallow) copy of this SegmentPixels that unrestricts indexing
-     * of the backing array.
+     * Returns the translation of this segment's restricted index to indices of
+     * pixels in the backing array.
+     * @return
+     */
+    std::vector<int> restrictionIndices() const;
+
+
+    /**
+     * Returns a (shallow) copy of this SegmentPixels that has no indexing
+     * restrictions on the backing array.
      * @return
      */
     [[nodiscard]]
@@ -226,7 +244,7 @@ public:
      * @return
      */
     [[nodiscard]]
-    uint32_t size() const;
+    int size() const;
 
     /**
      * Returns a (borrowed) pointer to the pixel at the given index.
@@ -243,15 +261,15 @@ public:
     SegmentPixels deepCopy() const;
 
 private:
-    SegmentPixels(size_t nPixels,
-                  size_t pixelDepth,
+    SegmentPixels(int nPixels,
+                  int pixelDepth,
                   std::shared_ptr<float[]> pixelData,
                   std::shared_ptr<View> view);
 
     const std::shared_ptr<float[]> pixelData;
 
     // # of pixels in pixelData
-    const uint32_t nPixels;
+    const int nPixels;
 
     // params for a restricted view of pixelData
     const std::shared_ptr<View> view;

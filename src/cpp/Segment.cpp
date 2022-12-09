@@ -8,14 +8,14 @@ using namespace pxsort;
 struct SegmentPixels::View {
     virtual ~View() = default;
 
-    virtual size_t operator[](size_t idx) const = 0;
+    virtual int operator[](size_t idx) const = 0;
     [[nodiscard]]
-    virtual size_t size() const = 0;
+    virtual int size() const = 0;
 };
 
 struct Subarray : public SegmentPixels::View {
-    const size_t startIdx;
-    const size_t length;
+    const int startIdx;
+    const int length;
 
     ~Subarray() override = default;
 
@@ -23,20 +23,20 @@ struct Subarray : public SegmentPixels::View {
        : startIdx(startIdx), length(length) {}
 
 private:
-    size_t operator[](size_t idx) const override;
-    size_t size() const override;
+    int operator[](size_t idx) const override;
+    int size() const override;
 };
 
 struct Filter : public SegmentPixels::View {
-    const std::vector<size_t> indices;
+    const std::vector<int> indices;
 
     ~Filter() override = default;
 
-    Filter(std::vector<size_t> indices) : indices(std::move(indices)) {}
+    Filter(std::vector<int> indices) : indices(std::move(indices)) {}
 
 private:
-    size_t operator[](size_t idx) const override;
-    size_t size() const override;
+    int operator[](size_t idx) const override;
+    int size() const override;
 };
 
 SegmentPixels::SegmentPixels(uint32_t nPixels, uint32_t depth)
@@ -69,14 +69,14 @@ SegmentPixels SegmentPixels::asdfRestriction(const Map& startTest,
             std::make_shared<Subarray>(start, length)};
 }
 
-pxsort::SegmentPixels::SegmentPixels(size_t nPixels, size_t depth,
+pxsort::SegmentPixels::SegmentPixels(int nPixels, int pixelDepth,
                                      std::shared_ptr<float[]> pixelData,
                                      std::shared_ptr<View> view)
-    : nPixels(nPixels), pixelDepth(depth),
+    : nPixels(nPixels), pixelDepth(pixelDepth),
     pixelData(std::move(pixelData)), view(std::move(view)) {}
 
 SegmentPixels pxsort::SegmentPixels::filterRestriction(const Map &filterTest) const {
-    std::vector<size_t> indices;
+    std::vector<int> indices;
     for(int idx = 0; idx < nPixels; idx++) {
         float res;
         filterTest(at(idx), &res);
@@ -92,7 +92,7 @@ SegmentPixels pxsort::SegmentPixels::unrestricted() const {
             std::make_shared<Subarray>(0, nPixels)};
 }
 
-uint32_t pxsort::SegmentPixels::size() const {
+int pxsort::SegmentPixels::size() const {
     return view->size();
 }
 
@@ -106,12 +106,27 @@ SegmentPixels pxsort::SegmentPixels::deepCopy() const {
     std::shared_ptr<float[]> dataCopy(new float[nPixels * pixelDepth]);
     std::copy_n(this->pixelData.get(), nPixels * pixelDepth, dataCopy.get());
 
-
-
     return {nPixels, pixelDepth, std::move(dataCopy), view};
 }
 
-size_t Subarray::operator[](size_t idx) const {
+SegmentPixels pxsort::SegmentPixels::restrictToIndices(
+        const std::vector<int> &indices) const {
+    std::vector<int> validIndices;
+    for (auto &idx : indices)
+        if (0 <= idx && idx < nPixels)
+            validIndices.push_back(idx);
+    return {nPixels, pixelDepth,
+            pixelData, std::make_shared<Filter>(validIndices)};
+}
+
+std::vector<int> pxsort::SegmentPixels::restrictionIndices() const {
+    std::vector<int> indices(view->size());
+    for (int i = 0; i < view->size(); i++)
+        indices[i] = (*view)[i];
+    return indices;
+}
+
+int Subarray::operator[](size_t idx) const {
 #ifdef PXSORT_DEBUG
     assert(idx >= 0);
     assert(idx < length);
@@ -119,11 +134,11 @@ size_t Subarray::operator[](size_t idx) const {
     return startIdx + idx;
 }
 
-size_t Subarray::size() const {
+int Subarray::size() const {
     return length;
 }
 
-size_t Filter::operator[](size_t idx) const {
+int Filter::operator[](size_t idx) const {
 #ifdef PXSORT_DEBUG
     assert(idx >= 0);
     assert(idx < indices.size());
@@ -131,7 +146,7 @@ size_t Filter::operator[](size_t idx) const {
     return indices[idx];
 }
 
-size_t Filter::size() const {
+int Filter::size() const {
     return indices.size();
 }
 
@@ -168,12 +183,13 @@ int Segment::getBTBFIndex(int idx) const {
 }
 
 Segment::Segment(uint32_t width, uint32_t height, uint32_t x0, uint32_t y0)
-  : pxCoords() {
-    auto *mutPxCoords =
-            const_cast<std::vector<Coordinates> *>(&pxCoords);
+  : pxCoords(width * height) {
+    int i = 0;
     for (int dx = 0; dx < width; dx++)
-        for (int dy = 0; dy < height; dy++)
-            mutPxCoords->push_back({x0 + dx, y0 + dy});
+        for (int dy = 0; dy < height; dy++) {
+            pxCoords[i] = {x0 + dx, y0 + dy};
+            i++;
+        }
 }
 
 Segment::Segment(std::vector<Coordinates> pixelCoordinates)
@@ -223,6 +239,7 @@ void Segment::putPixels(Image &img,
                         Segment::Traversal traversal,
                         const SegmentPixels &segPx) const {
     const SegmentPixels fullPx = segPx.unrestricted();
+
 #ifdef PXSORT_DEBUG
     assert(segPx.pixelDepth == img.depth);
     assert(size() == fullPx.size());
@@ -356,6 +373,10 @@ Segment Segment::filter(const Map &coordPred) const {
 
 Segment::Coordinates Segment::operator[](int idx) const {
     return pxCoords[PXSORT_MODULO(idx, this->size())];
+}
+
+std::vector<Segment::Coordinates> &Segment::getCoordinates() {
+    return pxCoords;
 }
 
 

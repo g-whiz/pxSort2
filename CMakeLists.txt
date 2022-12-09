@@ -12,6 +12,8 @@ if(NOT DEFINED CMAKE_INSTALL_DIR)
 endif()
 message(STATUS "install location: ${CMAKE_INSTALL_DIR}")
 
+
+set(CMAKE_BUILD_TYPE Debug)
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
     add_compile_definitions(PXSORT_DEBUG)
 endif ()
