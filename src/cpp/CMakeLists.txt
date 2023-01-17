@@ -9,7 +9,10 @@ pybind11_add_module(${python_module} MODULE
         Image.h
         Image.cpp
         Map.h
-        Map.cpp)
+        Map.cpp
+        Compute.h
+        Compute.cpp)
+target_link_libraries(${python_module} PRIVATE TBB::tbb OpenMP::OpenMP_CXX)
 target_include_directories(${python_module} PUBLIC ${CMAKE_SOURCE_DIR}/cpp)
 target_compile_definitions(${python_module}
                            PRIVATE VERSION_INFO=${PROJECT_VERSION})

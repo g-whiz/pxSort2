@@ -1,6 +1,6 @@
 [project]
 name = "pxsort"
-version = "0.0.1"
+version = "0.0.4"
 authors = [
   { name="George Gianacopoulos", email="ggianacopoulos@proton.me" },
 ]
@@ -22,6 +22,7 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
+    "scipy",
     "numba",
     "opencv-python"
 ]

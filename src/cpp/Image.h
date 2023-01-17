@@ -12,12 +12,14 @@
  */
 class pxsort::Image {
 public:
+//    class ImageImpl;
+
     /** Width of this image (in pixels). */
-    const uint32_t width;
+    const int32_t width;
     /** Height of this image (in pixels). */
-    const uint32_t height;
+    const int32_t height;
     /** Channels in each of this Image's pixels. */
-    const uint32_t depth;
+    const int32_t depth;
 
     Image() = delete;
 
@@ -31,7 +33,7 @@ public:
      * @param height The height of the image (in pixels).
      * @param channels The number of channels in each of this Image's pixels.
      */
-    Image(uint32_t width, uint32_t height, uint32_t channels);
+    Image(int32_t width, int32_t height, int32_t channels);
 
     /**
      * Construct a new Image with uninitialized pixel pixelData.
@@ -47,7 +49,8 @@ public:
      * i.e. Pixel (x, y) is at &pixelData[y * width * pixelDepth + x * pixelDepth], and channel
      *      i of pixel (x, y) is at &pixelData[y * width * pixelDepth + x * pixelDepth + i]
      */
-    Image(uint32_t width, uint32_t height, uint32_t channels, float *src_data);
+    Image(int32_t width, int32_t height,
+          int32_t channels, const std::shared_ptr<float[]>&);
 
     /**
      * Returns a pointer to the pixel with coordinates (x, y) in this image.
@@ -57,7 +60,7 @@ public:
      * @return A pointer to a pixel with this->pixelDepth channels.
      */
     [[nodiscard]]
-    float *ptr(uint32_t x, uint32_t y);
+    float *ptr(int32_t x, int32_t y);
 
     /**
      * Returns a pointer to the pixel with coordinates (x, y) in this image.
@@ -67,7 +70,7 @@ public:
      * @return A pointer to a pixel with this->pixelDepth channels.
      */
     [[nodiscard]]
-    const float *ptr(uint32_t x, uint32_t y) const;
+    const float *ptr(int32_t x, int32_t y) const;
 
     /**
      * Returns the value of channel cn for the pixel at coordinates (x, y).
@@ -78,10 +81,11 @@ public:
      * @return
      */
     [[nodiscard]]
-    float at(uint32_t x, uint32_t y, uint32_t cn) const;
+    float at(int32_t x, int32_t y, int32_t cn) const;
 
 private:
-    const uint32_t row_stride;
+
+    const int32_t row_stride;
 
     /** Array containing the underlying pixel pixelData for this Image.
      *  It has shape (width, height),

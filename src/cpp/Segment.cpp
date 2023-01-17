@@ -1,5 +1,6 @@
 #include <unordered_set>
 #include <cassert>
+
 #include "Segment.h"
 #include "Image.h"
 
@@ -8,7 +9,7 @@ using namespace pxsort;
 struct SegmentPixels::View {
     virtual ~View() = default;
 
-    virtual int operator[](size_t idx) const = 0;
+    virtual int operator[](int idx) const = 0;
     [[nodiscard]]
     virtual int size() const = 0;
 };
@@ -23,7 +24,7 @@ struct Subarray : public SegmentPixels::View {
        : startIdx(startIdx), length(length) {}
 
 private:
-    int operator[](size_t idx) const override;
+    int operator[](int idx) const override;
     int size() const override;
 };
 
@@ -35,7 +36,7 @@ struct Filter : public SegmentPixels::View {
     Filter(std::vector<int> indices) : indices(std::move(indices)) {}
 
 private:
-    int operator[](size_t idx) const override;
+    int operator[](int idx) const override;
     int size() const override;
 };
 
@@ -96,7 +97,7 @@ int pxsort::SegmentPixels::size() const {
     return view->size();
 }
 
-float *pxsort::SegmentPixels::at(size_t viewIdx) const {
+float *pxsort::SegmentPixels::at(int viewIdx) const {
     auto trueIdx = (*view)[viewIdx];
     auto scaledIdx = trueIdx * pixelDepth;
     return &pixelData[scaledIdx];
@@ -126,10 +127,13 @@ std::vector<int> pxsort::SegmentPixels::restrictionIndices() const {
     return indices;
 }
 
-int Subarray::operator[](size_t idx) const {
+pxsort::SegmentPixels::SegmentPixels()
+: SegmentPixels(1, 1) {}
+
+int Subarray::operator[](int idx) const {
 #ifdef PXSORT_DEBUG
     assert(idx >= 0);
-    assert(idx < length);
+    assert(idx < size());
 #endif // PXSORT_DEBUG
     return startIdx + idx;
 }
@@ -138,7 +142,7 @@ int Subarray::size() const {
     return length;
 }
 
-int Filter::operator[](size_t idx) const {
+int Filter::operator[](int idx) const {
 #ifdef PXSORT_DEBUG
     assert(idx >= 0);
     assert(idx < indices.size());
@@ -212,19 +216,27 @@ SegmentPixels Segment::getPixels(const Image &img,
     auto nPixels = pxCoords.size();
     SegmentPixels segPx(nPixels, img.depth);
 
+    #pragma omp parallel for default(none) \
+            shared(img, traversal, segPx, nPixels, skew)
     for (int i = 0; i < nPixels; i++) {
         auto idx = getIndexForTraversal(i, traversal);
 
         const auto &[x, y] = pxCoords[idx];
         float *pixel = segPx.at(idx);
 
+        #pragma omp simd
         for (int cn = 0; cn < img.depth; cn++) {
             float skewIn[] = {static_cast<float>(x),
                               static_cast<float>(y),
                               static_cast<float>(cn)};
             float skewOut[2];
             skew(skewIn, skewOut);
-            pixel[cn] = img.at(skewOut[0], skewOut[1], cn);
+            int skx = static_cast<int>(skewOut[0]);
+            int sky = static_cast<int>(skewOut[1]);
+            pixel[cn] = img.at(
+                    min(img.width - 1, max(0, skx)),
+                    min(img.height - 1, max(0, sky)),
+                    cn);
         }
     }
 
@@ -241,10 +253,11 @@ void Segment::putPixels(Image &img,
     const SegmentPixels fullPx = segPx.unrestricted();
 
 #ifdef PXSORT_DEBUG
-    assert(segPx.pixelDepth == img.depth);
+    assert(segPx.depth() == img.depth);
     assert(size() == fullPx.size());
 #endif
 
+    #pragma omp parallel for default(none) shared(img, traversal, fullPx)
     for (int i = 0; i < size(); i++) {
         auto idx = getIndexForTraversal(i, traversal);
         const auto &[x, y] = pxCoords[idx];
@@ -379,4 +392,6 @@ std::vector<Segment::Coordinates> &Segment::getCoordinates() {
     return pxCoords;
 }
 
-
+int SegmentPixels::depth() const {
+    return pixelDepth;
+}

@@ -1,7 +1,6 @@
 enable_language(CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Check primitive types
 option(CHECK_TYPE "Check primitive type size" OFF)
@@ -33,5 +32,6 @@ if(CHECK_TYPE)
   cmake_pop_check_state()
 endif()
 
-#find_package(OpenMP REQUIRED)
+find_package(OpenMP REQUIRED)
+find_package(TBB REQUIRED)
 add_subdirectory(src/cpp)

@@ -159,14 +159,9 @@ class pxsort::SegmentPixels {
 public:
     struct View;
 
-    // # of channels in each pixel
-    const int pixelDepth;
-
-    SegmentPixels() = delete;
+    SegmentPixels();
 
     SegmentPixels(const SegmentPixels &other) = default;
-
-    SegmentPixels(SegmentPixels &&other) = default;
 
     /**
      * Creates a SegmentPixels with uninitialized pixel data.
@@ -218,6 +213,7 @@ public:
      * @param indices
      * @return
      */
+    [[nodiscard]]
     SegmentPixels restrictToIndices(const std::vector<int> &indices) const;
 
 
@@ -226,6 +222,7 @@ public:
      * pixels in the backing array.
      * @return
      */
+    [[nodiscard]]
     std::vector<int> restrictionIndices() const;
 
 
@@ -247,11 +244,18 @@ public:
     int size() const;
 
     /**
+     * Returns the pixel depth of this SegmentPixels.
+     * @return
+     */
+    [[nodiscard]]
+    int depth() const;
+
+    /**
      * Returns a (borrowed) pointer to the pixel at the given index.
      * @param viewIdx
      */
     [[nodiscard]]
-    float *at(size_t viewIdx) const;
+    float *at(int viewIdx) const;
 
     /**
      * Returns a deep copy of this SegmentPixels.
@@ -266,13 +270,16 @@ private:
                   std::shared_ptr<float[]> pixelData,
                   std::shared_ptr<View> view);
 
-    const std::shared_ptr<float[]> pixelData;
+    std::shared_ptr<float[]> pixelData;
 
     // # of pixels in pixelData
-    const int nPixels;
+    int nPixels;
+
+    // # of channels in each pixel
+    int pixelDepth;
 
     // params for a restricted view of pixelData
-    const std::shared_ptr<View> view;
+    std::shared_ptr<View> view;
 };
 
 

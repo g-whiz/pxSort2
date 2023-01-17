@@ -38,10 +38,10 @@ public:
 
 private:
 
-    uint32_t bucket(float *pixel) const;
+    int bucket(float *pixel) const;
 };
 
-uint32_t BucketSort::bucket(float *pixel) const {
+int BucketSort::bucket(float *pixel) const {
     float pxProj;
     projectPixel(pixel, &pxProj);
 
@@ -56,28 +56,41 @@ uint32_t BucketSort::bucket(float *pixel) const {
 SegmentPixels BucketSort::operator()(
         const SegmentPixels &base,
         const SegmentPixels &skewed) const {
-    auto nPixels = base.size();
-    auto nChannels = base.pixelDepth;
+    const int nPixels = base.size();
+    const int nChannels = base.depth();
 
-    // Count pixels in each bucket.
-    std::vector<uint32_t> counts(nBuckets, 0);
+    int bkt[nPixels];
+    int counts[nBuckets];
+    #pragma omp simd
+    for (int i = 0; i < nBuckets; i++)
+        counts[i] = 0;
+
+    #pragma omp parallel for default(none) \
+            shared(nPixels, skewed, bkt) reduction(+:counts[:nBuckets])
     for (int i = 0; i < nPixels; i++) {
-        auto bkt = bucket(skewed.at(i));
-        counts[bkt]++;
+        bkt[i] = bucket(skewed.at(i));
+        counts[bkt[i]]++;
     }
 
     // Compute index of first pixel in each bucket
-    std::vector<uint32_t> indices(nBuckets, 0);
-    for (int bkt = 1; bkt < nBuckets; bkt++)
-        indices[bkt] = counts[bkt - 1] + indices[bkt - 1];
+    int indices[nBuckets];
+    for (int i = 0; i < nBuckets; i++)
+        indices[i] = 0;
 
-    auto result = base.deepCopy();
+    for (int b = 1; b < nBuckets; b++)
+        indices[b] = counts[b - 1] + indices[b - 1];
+
+    const SegmentPixels result = base.deepCopy();
     float inPx[2 * nChannels];
     float outPx[2 * nChannels];
+    #pragma omp parallel for default(none) private(inPx, outPx) \
+            shared(nPixels, nChannels, indices, bkt, result, skewed)
     for (int iBase = 0; iBase < nPixels; iBase++) {
-        auto bkt = bucket(skewed.at(iBase));
-        uint32_t const iSorted = indices[bkt];
-        indices[bkt]++;
+        int bkt_iBase = bkt[iBase];
+        int iSorted;
+
+        #pragma omp atomic capture
+        iSorted = indices[bkt_iBase]++;
 
         std::copy_n(result.at(iSorted), nChannels, inPx);
         std::copy_n(skewed.at(iBase), nChannels, &inPx[nChannels]);
@@ -115,7 +128,7 @@ SegmentPixels Heapify::operator()(
         const SegmentPixels &base,
         const SegmentPixels &skewed) const {
     long nPixels = base.size();
-    long nChannels = base.pixelDepth;
+    long nChannels = base.depth();
 
     SegmentPixels result = skewed.deepCopy();
     for (long i = (nPixels / 2) - 1; i >= 0; i--) {
@@ -195,7 +208,7 @@ SegmentPixels Bubble::operator()(
         const SegmentPixels &base,
         const SegmentPixels &skewed) const {
     auto nPixels = base.size();
-    auto nChannels = base.pixelDepth;
+    auto nChannels = base.depth();
     uint32_t maxPasses = fraction * static_cast<double>(nPixels); // NOLINT(cppcoreguidelines-narrowing-conversions)
 
     // optimization to avoid quadratic calls to potentially expensive project
@@ -275,7 +288,7 @@ pxsort::Sorter::Sorter(uint32_t pixelDepth, std::shared_ptr<SorterImpl> pImpl)
 SegmentPixels pxsort::Sorter::operator()(
         const SegmentPixels &basePixels,
         const SegmentPixels &skewedPixels) const {
-    assert(basePixels.pixelDepth == this->pixelDepth);
-    assert(skewedPixels.pixelDepth == this->pixelDepth);
+    assert(basePixels.depth() == this->pixelDepth);
+    assert(skewedPixels.depth() == this->pixelDepth);
     return (*pImpl)(basePixels, skewedPixels);
 }
