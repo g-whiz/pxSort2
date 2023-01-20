@@ -21,15 +21,7 @@ endif ()
 
 # Define CMAKE_INSTALL_xxx: LIBDIR, INCLUDEDIR
 include(GNUInstallDirs)
-include(FetchContent)
-
-# Fetch pybind11 lib (v2.10.1)
-FetchContent_Declare(
-        pybind11
-        URL https://github.com/pybind/pybind11/archive/refs/tags/v2.10.1.tar.gz
-        URL_HASH SHA256=111014b516b625083bef701df7880f78c2243835abdb263065b6b59b960b6bad
-)
-FetchContent_MakeAvailable(pybind11)
+add_subdirectory(lib/pybind11)
 
 include(cpp)
 include(python)
