@@ -1,6 +1,6 @@
 [project]
 name = "pxsort"
-version = "0.0.4"
+version = "0.0.6"
 authors = [
   { name="George Gianacopoulos", email="ggianacopoulos@proton.me" },
 ]

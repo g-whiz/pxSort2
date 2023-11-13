@@ -2,7 +2,9 @@
 #define PXSORT2_MAP_H
 
 #include <functional>
-#include "common.h"
+#include <cstdint>
+#include <memory>
+#include "fwd.h"
 
 namespace pxsort {
 
@@ -13,17 +15,19 @@ namespace pxsort {
     public:
         class MapImpl;
 
-        using FuncPtr = void(*)(float *, uint32_t, float *, uint32_t);
+        using fp_t = void(*)(const float *, int32_t, float *, int32_t);
+        using fn_t = std::function<void(const float *, int32_t,
+                                        float *, int32_t)>;
 
         /**
          * The dimension of this Map's input.
          */
-        const uint32_t inDim;
+        const int32_t inDim;
 
         /**
          * The dimension of this Map's output.
          */
-        const uint32_t outDim;
+        const int32_t outDim;
 
         /**
          * Copy constructor.
@@ -46,33 +50,31 @@ namespace pxsort {
          *   Maps is to enable the use of a JIT compilation engine (like Numba) to
          *   allow calls to dynamically-compiled numerical functions.
          *
-         * @param f The function pointer to use for this map.
+         * @param fp The function pointer to use for this map.
          * This function's arguments are treated as:
          *     (float *in_ptr, int in_size, float* out_ptr, int out_size)
          * Each of in_ptr and out_ptr can be assumed to be initialized float
          *   arrays of length in_size and out_size respectively.
-         * The input for this Map is passed to f via in_ptr, and f is expected to
+         * The input for this Map is passed to fp via in_ptr, and fp is expected to
          *   return it's result via out_ptr, which this map will subsequently return
          *   as its result.
-         * @param in_dim The dimension of the input to this map (and to f).
-         * @param out_dim The dimension of the output from this map (and from f).
+         * @param in_dim The dimension of the input to this map (and to fp).
+         * @param out_dim The dimension of the output from this map (and from fp).
          */
-        Map(void(*f)(float *, uint32_t, float *, uint32_t),
-            uint32_t in_dim, uint32_t out_dim);
+        Map(fp_t fp, int32_t in_dim, int32_t out_dim);
 
         /**
          * Creates a new Map from a std::function object.
-         * @param f The std::function to use for this map.
-         * @param in_dim The dimension of the input to this map (and to f).
-         * @param out_dim The dimension of the output from this map (and from f).
+         * @param fn The std::function to use for this map.
+         * @param in_dim The dimension of the input to this map (and to fp).
+         * @param out_dim The dimension of the output from this map (and from fp).
          */
-        Map(std::function<void(float *, uint32_t, float *, uint32_t)> f,
-            uint32_t in_dim, uint32_t out_dim);
+        Map(fn_t fn, int32_t in_dim, int32_t out_dim);
 
         /**
          * Function composition operator.
-         * Let f: B -> C, g: A -> B.
-         * Then (f << g): A -> C.
+         * Let fp: B -> C, g: A -> B.
+         * Then (fp << g): A -> C.
          * @param that A Map whose nPixels equals this Map's inDim
          * @throws std::invalid_argument If the dimension constraints are violated.
          * @return A Map that is the composition of the given Map and this Map.
@@ -81,8 +83,8 @@ namespace pxsort {
 
         /**
          * Function concatenation operator.
-         * Let f: A -> B, g: C -> D.
-         * Then (f | g): A x C -> B x D.
+         * Let fp: A -> B, g: C -> D.
+         * Then (fp | g): A x C -> B x D.
          * @param that A Map
          * @return A Map that is the composition of the given Map and this Map.
          */
@@ -102,13 +104,13 @@ namespace pxsort {
          * @param c The constant values for the resulting map to evaluate to.
          * @return
          */
-        static Map constant(std::vector<float> c, uint32_t in_dim = 0);
+        static Map constant(std::vector<float> c, int32_t in_dim = 0);
 
         /**
          * Function "fork" operator.
-         * Let f: A -> B, g: A -> C
-         * Then (f ^ g): A -> B x C
-         * i.e. the resulting map returns the concatenated result of f and g when
+         * Let fp: A -> B, g: A -> C
+         * Then (fp ^ g): A -> B x C
+         * i.e. the resulting map returns the concatenated result of fp and g when
          *      evaluated on the same input
          * @param that A Map whose inDim equals this Map's inDim
          * @throws std::invalid_argument If the dimension constraints are violated.
@@ -143,15 +145,14 @@ namespace pxsort {
          * @param out A C array to return this Map's output via.
          *     Assumed to be allocated with length nPixels.
          */
-        void operator()(float *in, float *out) const;
+        void operator()(const float *in, float *out) const;
 
         bool operator==(const Map &other) const;
 
     private:
-        Map(std::shared_ptr<MapImpl> pImpl, uint32_t in_dim, uint32_t out_dim);
+        Map(std::shared_ptr<MapImpl> pImpl, int32_t in_dim, int32_t out_dim);
 
         const std::shared_ptr<MapImpl> pImpl;
     };
-
 }
 #endif //PXSORT2_MAP_H

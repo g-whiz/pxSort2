@@ -1,8 +1,10 @@
 #include <cassert>
 #include <cmath>
 #include <vector>
+#include <memory>
 #include "Sorter.h"
 #include "Segment.h"
+#include "util.h"
 
 using namespace pxsort;
 
@@ -16,16 +18,14 @@ public:
 };
 
 class BucketSort : public Sorter::SorterImpl {
-    using Bucket = std::pair<float, float>;
-
     const Map projectPixel;
     const Map mixPixels;
-    const uint32_t nBuckets;
+    const int32_t nBuckets;
 
 public:
     BucketSort(const Map& pixelProjection,
                const Map& pixelMixer,
-               uint32_t nBuckets)
+               int32_t nBuckets)
       : projectPixel(pixelProjection),
         mixPixels(pixelMixer),
         nBuckets(nBuckets){}
@@ -35,13 +35,9 @@ public:
     SegmentPixels operator()(
             const SegmentPixels& base,
             const SegmentPixels& skewed) const override;
-
-private:
-
-    int bucket(float *pixel) const;
 };
 
-int BucketSort::bucket(float *pixel) const {
+int bucket(const float *pixel, const Map& projectPixel, int nBuckets) {
     float pxProj;
     projectPixel(pixel, &pxProj);
 
@@ -53,22 +49,25 @@ int BucketSort::bucket(float *pixel) const {
     return bucket;
 }
 
-SegmentPixels BucketSort::operator()(
-        const SegmentPixels &base,
-        const SegmentPixels &skewed) const {
+SegmentPixels bucketSort(const SegmentPixels &base,
+                         const SegmentPixels &skewed,
+                         const Map& projectPixel,
+                         const Map& mixPixels,
+                         int32_t nBuckets) {
     const int nPixels = base.size();
     const int nChannels = base.depth();
 
     int bkt[nPixels];
     int counts[nBuckets];
-    #pragma omp simd
+#pragma omp simd
     for (int i = 0; i < nBuckets; i++)
         counts[i] = 0;
 
-    #pragma omp parallel for default(none) \
-            shared(nPixels, skewed, bkt) reduction(+:counts[:nBuckets])
+#pragma omp parallel for default(none) \
+            shared(nPixels, skewed, bkt, nBuckets, projectPixel) \
+            reduction(+:counts[:nBuckets])
     for (int i = 0; i < nPixels; i++) {
-        bkt[i] = bucket(skewed.at(i));
+        bkt[i] = bucket(skewed.px(i), projectPixel, nBuckets);
         counts[bkt[i]]++;
     }
 
@@ -80,11 +79,11 @@ SegmentPixels BucketSort::operator()(
     for (int b = 1; b < nBuckets; b++)
         indices[b] = counts[b - 1] + indices[b - 1];
 
-    const SegmentPixels result = base.deepCopy();
+    SegmentPixels result = base.deepCopy();
     float inPx[2 * nChannels];
     float outPx[2 * nChannels];
     #pragma omp parallel for default(none) private(inPx, outPx) \
-            shared(nPixels, nChannels, indices, bkt, result, skewed)
+            shared(nPixels, nChannels, indices, bkt, result, skewed, mixPixels)
     for (int iBase = 0; iBase < nPixels; iBase++) {
         int bkt_iBase = bkt[iBase];
         int iSorted;
@@ -92,15 +91,21 @@ SegmentPixels BucketSort::operator()(
         #pragma omp atomic capture
         iSorted = indices[bkt_iBase]++;
 
-        std::copy_n(result.at(iSorted), nChannels, inPx);
-        std::copy_n(skewed.at(iBase), nChannels, &inPx[nChannels]);
+        std::copy_n(result.px(iSorted), nChannels, inPx);
+        std::copy_n(skewed.px(iBase), nChannels, &inPx[nChannels]);
 
         mixPixels(inPx, outPx);
 
-        std::copy_n(outPx, nChannels, result.at(iSorted));
+        std::copy_n(outPx, nChannels, result.px(iSorted));
     }
 
     return result;
+}
+
+SegmentPixels BucketSort::operator()(
+        const SegmentPixels &base,
+        const SegmentPixels &skewed) const {
+    return bucketSort(base, skewed, projectPixel, mixPixels, nBuckets);
 }
 
 class Heapify : public Sorter::SorterImpl {
@@ -143,15 +148,15 @@ SegmentPixels Heapify::operator()(
             // Use our pixel projection to determine the "largest" pixel out of
             // the root and its left and right children (if they exist).
             float rootProj;
-            project(result.at(root), &rootProj);
+            project(result.px(root), &rootProj);
 
             float leftProj = -INFINITY;
             if (left < nPixels)
-                project(result.at(left), &leftProj);
+                project(result.px(left), &leftProj);
 
             float rightProj = -INFINITY;
             if (right < nPixels)
-                project(result.at(right), &rightProj);
+                project(result.px(right), &rightProj);
 
             auto largest = rootProj > leftProj ? (rootProj > rightProj ? root
                                                                        : right)
@@ -159,18 +164,18 @@ SegmentPixels Heapify::operator()(
                                                                        : right);
 
             // If the largest of the root and its left and right children is
-            // not the root, then we need to do a swap (mix in this context)
+            // not the root, then we need to do a swap (mixPixels in this context)
             // and continue bubbling down.
             float inPx[2 * nChannels];
             float outPx[2 * nChannels];
             if (largest != root) {
-                std::copy_n(result.at(root), nChannels, inPx);
-                std::copy_n(result.at(largest), nChannels, &inPx[nChannels]);
+                std::copy_n(result.px(root), nChannels, inPx);
+                std::copy_n(result.px(largest), nChannels, &inPx[nChannels]);
 
                 mix(inPx, outPx);
 
-                std::copy_n(outPx, nChannels, result.at(root));
-                std::copy_n(&outPx[nChannels], nChannels, result.at(largest));
+                std::copy_n(outPx, nChannels, result.px(root));
+                std::copy_n(&outPx[nChannels], nChannels, result.px(largest));
 
                 root = largest;
             }
@@ -209,39 +214,237 @@ SegmentPixels Bubble::operator()(
         const SegmentPixels &skewed) const {
     auto nPixels = base.size();
     auto nChannels = base.depth();
-    uint32_t maxPasses = fraction * static_cast<double>(nPixels); // NOLINT(cppcoreguidelines-narrowing-conversions)
+    const int maxPasses = fraction * static_cast<double>(nPixels);
 
-    // optimization to avoid quadratic calls to potentially expensive project
-    // functions
-    std::unique_ptr<float[]> skewProj(new float[nPixels]);
+    // optimization to avoid quadratic calls to potentially expensive
+    // projection routines
+    const std::unique_ptr<float[]> proj(new float[nPixels]);
+    #pragma omp parallel for default(none) shared(nPixels, base, proj)
     for (int i = 0; i < nPixels; i++)
-        project(skewed.at(i), &skewProj[i]);
+        project(base.px(i), &(proj[i]));
 
-    SegmentPixels result = base.deepCopy();
-    uint32_t passes = 0;
-    uint32_t n = nPixels - 1;
-    float baseProj;
+    SegmentPixels result = skewed.deepCopy();
+    int32_t passes = 0;
+    int32_t n = nPixels - 1;
     float inPx[2 * nChannels];
     float outPx[2 * nChannels];
     do {
-        uint32_t newN = 0;
-        project(base.at(n), &baseProj);
+        int32_t newN = 0;
         for (int i = 1; i < n; i++) {
-            if (skewProj[i] < baseProj) {
+            if (proj[i] < proj[i - 1]) {
+                auto lo = proj[i];
+                proj[i] = proj[i - 1];
+                proj[i - 1] = lo;
                 newN = i;
 
-                std::copy_n(skewed.at(i - 1), nChannels, inPx);
-                std::copy_n(result.at(i), nChannels, inPx);
+                std::copy_n(result.px(i - 1), 2 * nChannels, inPx);
                 mix(inPx, outPx);
-                std::copy_n(outPx, nChannels, result.at(i));
+                std::copy_n(outPx, 2 * nChannels, result.px(i - 1));
             }
         }
         n = newN;
         passes++;
-    } while (n > 1 || passes >= maxPasses);
+    } while (n > 1 && passes < maxPasses);
 
     return result;
 }
+
+
+struct PseudoBubble : public Sorter::SorterImpl {
+    PseudoBubble(Map pixelProjection, Map pixelMixer,
+                 double fraction, int maxBuckets)
+            : projectPixel(std::move(pixelProjection)),
+              mixPixels(std::move(pixelMixer)),
+              fraction(clamp<double>(fraction, 0.0, 1.0)),
+              fineStep(1.0 / static_cast<float>(maxBuckets)),
+              maxBuckets(maxBuckets) {}
+
+    ~PseudoBubble() override = default;
+
+    SegmentPixels operator()(
+            const SegmentPixels &base,
+            const SegmentPixels &skewed) const override;
+
+private:
+    Map projectPixel;
+    Map mixPixels;
+    double fraction;
+
+    int maxBuckets;
+    float fineStep;
+};
+
+// return value:
+//  - == 0 when d(x, a) == d(x, b)
+//  -  < 0 when d(x, a) < d(x, b)
+//  -  > 0 when d(x, a) > d(x, b)
+inline int cmpAbsDist(int x, int a, int b) {
+    return abs(x - a) - abs(x - b);
+}
+
+SegmentPixels PseudoBubble::operator()(
+        const SegmentPixels &base,
+        const SegmentPixels &skewed) const {
+    int const nPx = base.size();
+    int const nCh = base.depth();
+
+    std::unique_ptr<int[]> const initBkt(new int[nPx]);
+    int initCounts[maxBuckets];
+    #pragma omp simd
+    for (int i = 0; i < maxBuckets; i++)
+        initCounts[i] = 0;
+
+    #pragma omp parallel for default(none) \
+            reduction(+:initCounts[:maxBuckets]) \
+            shared(nPx, skewed, initBkt)
+    for (int i = 0; i < nPx; i++) {
+        float pxProj;
+        projectPixel(skewed.px(i), &pxProj);
+
+        initBkt[i] = clamp(static_cast<int>(std::floor(pxProj / fineStep)),
+                           0, maxBuckets - 1);
+        initCounts[initBkt[i]]++;
+    }
+
+    int target = std::ceil(static_cast<double>(nPx) * fraction);
+    int minBkt = maxBuckets;
+    for (int size = 0; minBkt > 0;) {
+        // if we are on target, or would exceed target next iteration, stop
+        if (size >= target
+            || (minBkt > 0 && (size + initCounts[minBkt - 1] > target)))
+            break;
+        minBkt--;
+        size += initCounts[minBkt];
+    }
+
+    const std::unique_ptr<int[]> bkt(new int[nPx]);
+    const int nBkts = 1 + (maxBuckets - minBkt);
+    int bktCounts[nBkts];
+    #pragma omp simd
+    for (int i = 0; i < nBkts; i++)
+        bktCounts[i] = 0;
+
+    #pragma omp parallel for default(none) \
+            reduction(+:bktCounts[:nBkts]) \
+            shared(nPx, initBkt, bkt, minBkt, nBkts)
+    for (int i = 0; i < nPx; i++) {
+        int const bb = max(0, 1 + (initBkt[i] - minBkt));
+        bkt[i] = bb;
+        bktCounts[bb]++;
+    }
+
+    // Compute index of first pixel in each bucket
+    int bktStarts[nBkts];
+    bktStarts[0] = 0;
+    for (int b = 1; b < nBkts; b++)
+        bktStarts[b] = bktCounts[b - 1] + bktStarts[b - 1];
+
+
+    const std::unique_ptr<int[]> sortedIdx(new int[nPx]);
+    // unavoidable / non-parallelizable loop?
+    // want to preserve "unsorted" pixels' original order
+    for (int i = 0; i < nPx; i++) {
+        auto b = bkt[i];
+        sortedIdx[i] = bktStarts[b]++;
+    }
+
+    SegmentPixels result = base.deepCopy();
+    float inPx[2 * nCh];
+    float outPx[2 * nCh];
+    #pragma omp parallel for default(none) private(inPx, outPx) \
+            shared(nPx, nCh, sortedIdx, result, skewed)
+    for (int iBase = 0; iBase < nPx; iBase++) {
+        int iSorted = sortedIdx[iBase];
+
+        std::copy_n(result.px(iSorted), nCh, inPx);
+        std::copy_n(skewed.px(iBase), nCh, &inPx[nCh]);
+
+        mixPixels(inPx, outPx);
+
+        std::copy_n(outPx, nCh, result.px(iSorted));
+    }
+
+    return result;
+}
+
+struct PseudoBubble2 : public Sorter::SorterImpl {
+    PseudoBubble2(Map pixelProjection, Map pixelMixer,
+                  double fraction, int maxBuckets)
+            : projectPixel(std::move(pixelProjection)),
+              mixPixels(std::move(pixelMixer)),
+              fraction(clamp<double>(fraction, 0.0, 1.0)),
+              fineStep(1.0 / static_cast<float>(maxBuckets)),
+              maxBuckets(maxBuckets) {}
+
+    ~PseudoBubble2() override = default;
+
+    SegmentPixels operator()(
+            const SegmentPixels &base,
+            const SegmentPixels &skewed) const override;
+
+private:
+    Map projectPixel;
+    Map mixPixels;
+    double fraction;
+
+    int maxBuckets;
+    float fineStep;
+};
+
+SegmentPixels PseudoBubble2::operator()(
+        const SegmentPixels &base,
+        const SegmentPixels &skewed) const {
+    int const nPx = base.size();
+    int const nCh = base.depth();
+
+    std::unique_ptr<int[]> const initBkt(new int[nPx]);
+    int initCounts[maxBuckets];
+#pragma omp simd
+    for (int i = 0; i < maxBuckets; i++)
+        initCounts[i] = 0;
+
+#pragma omp parallel for default(none) \
+            reduction(+:initCounts[:maxBuckets]) \
+            shared(nPx, skewed, initBkt)
+    for (int i = 0; i < nPx; i++) {
+        float pxProj;
+        projectPixel(skewed.px(i), &pxProj);
+
+        initBkt[i] = clamp(static_cast<int>(std::floor(pxProj / fineStep)),
+                           0, maxBuckets - 1);
+        initCounts[initBkt[i]]++;
+    }
+
+    int target = std::ceil(static_cast<double>(nPx) * fraction);
+    int minBkt = maxBuckets;
+    for (int size = 0; minBkt > 0;) {
+        // if we are on target, or would exceed target next iteration, stop
+        if (size >= target
+            || (minBkt > 0 && (size + initCounts[minBkt - 1] > target)))
+            break;
+        minBkt--;
+        size += initCounts[minBkt];
+    }
+
+    int endcap = nPx - target;
+    std::vector<int> filterIdx;
+    for (int i = 0; i < endcap; i++) {
+        if (initBkt[i] >= minBkt)
+            filterIdx.push_back(i);
+    }
+    for (int i = endcap; i < nPx; i++)
+        filterIdx.push_back(i);
+
+    auto rBase = base.restrictToIndices(filterIdx);
+    SegmentPixels rSkew = skewed;
+    rSkew._setView(rBase._getView());
+
+    auto result = bucketSort(rBase, rSkew, projectPixel, mixPixels, maxBuckets);
+    result._setView(base._getView());
+
+    return result;
+}
+
 
 Sorter pxsort::Sorter::bucketSort(
         const Map &pixelProjection,
@@ -282,7 +485,7 @@ Sorter pxsort::Sorter::bubble(const Map &pixelProjection,
             std::make_shared<Bubble>(pixelProjection, pixelMixer, fraction)};
 }
 
-pxsort::Sorter::Sorter(uint32_t pixelDepth, std::shared_ptr<SorterImpl> pImpl)
+pxsort::Sorter::Sorter(int32_t pixelDepth, std::shared_ptr<SorterImpl> pImpl)
   : pixelDepth(pixelDepth), pImpl(std::move(pImpl)) {}
 
 SegmentPixels pxsort::Sorter::operator()(
@@ -291,4 +494,14 @@ SegmentPixels pxsort::Sorter::operator()(
     assert(basePixels.depth() == this->pixelDepth);
     assert(skewedPixels.depth() == this->pixelDepth);
     return (*pImpl)(basePixels, skewedPixels);
+}
+
+Sorter
+pxsort::Sorter::pseudoBubble(const Map &pixelProjection, const Map &pixelMixer,
+                             double fraction, int maxBuckets) {
+    auto depth = pixelProjection.inDim;
+    return {
+            depth,
+            std::make_shared<PseudoBubble>(pixelProjection, pixelMixer,
+                                           fraction, maxBuckets)};
 }

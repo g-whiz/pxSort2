@@ -1,4 +1,5 @@
 #include "Map.h"
+#include "util.h"
 
 #include <utility>
 #include <numeric>
@@ -15,51 +16,48 @@ public:
       : in_dim(in_dim), out_dim(out_dim) {}
 
     virtual
-    void operator()(float *in, float *out) const = 0;
+    void operator()(const float *in, float *out) const = 0;
 
     virtual ~MapImpl() = default;
 };
 
 class FuncPtrImpl : public Map::MapImpl {
-    using fp_t = void(*)(float*, uint32_t, float*, uint32_t);
-    const fp_t f;
+    Map::fp_t fp;
 
 public:
     FuncPtrImpl() = delete;
 
-    FuncPtrImpl(void(*f_ptr)(float*, uint32_t, float*, uint32_t), uint32_t in_dim, uint32_t out_dim)
-        : Map::MapImpl(in_dim, out_dim), f(f_ptr) {}
+    FuncPtrImpl(Map::fp_t fp, uint32_t in_dim, uint32_t out_dim)
+        : Map::MapImpl(in_dim, out_dim), fp(fp) {}
 
     ~FuncPtrImpl() override = default;
 
     inline
-    void operator()(float *in, float *out) const override {
-        f(in, in_dim, out, out_dim);
+    void operator()(const float *in, float *out) const override {
+        fp(in, in_dim, out, out_dim);
     }
 };
 
 class FuncObjImpl : public Map::MapImpl {
-    const std::function<void(float*, uint32_t, float*, uint32_t)> f;
+    Map::fn_t fn;
 
 public:
     FuncObjImpl() = delete;
 
-    explicit FuncObjImpl(
-            std::function<void(float*, uint32_t, float*, uint32_t)> f_obj,
-            uint32_t in_dim, uint32_t out_dim)
-        : Map::MapImpl(in_dim, out_dim), f(std::move(f_obj)) {}
+    FuncObjImpl(Map::fn_t fn, uint32_t in_dim, uint32_t out_dim)
+        : Map::MapImpl(in_dim, out_dim), fn(std::move(fn)) {}
 
     ~FuncObjImpl() override = default;
 
     inline
-    void operator()(float *in, float *out) const override {
-        f(in, in_dim, out, out_dim);
+    void operator()(const float *in, float *out) const override {
+        fn(in, in_dim, out, out_dim);
     }
 };
 
 class CompositionImpl : public Map::MapImpl {
-    const std::shared_ptr<MapImpl> f;
-    const std::shared_ptr<MapImpl> g;
+    std::shared_ptr<MapImpl> f;
+    std::shared_ptr<MapImpl> g;
 
 public:
     CompositionImpl() = delete;
@@ -72,7 +70,7 @@ public:
 
 private:
     inline
-    void operator()(float *in, float *out) const override {
+    void operator()(const float *in, float *out) const override {
         float g_out[g->out_dim];
         (*g)(in, g_out);
         (*f)(g_out, out);
@@ -102,7 +100,7 @@ public:
 private:
     const std::vector<ImplPtr> impls;
 
-    void operator()(float *in, float *out) const override {
+    void operator()(const float *in, float *out) const override {
         int in_idx = 0;
         int out_idx = 0;
         for (auto &impl: impls){
@@ -114,8 +112,8 @@ private:
 };
 
 class ForkImpl : public Map::MapImpl {
-    const std::shared_ptr<MapImpl> f;
-    const std::shared_ptr<MapImpl> g;
+    std::shared_ptr<MapImpl> f;
+    std::shared_ptr<MapImpl> g;
 public:
     ForkImpl() = delete;
 
@@ -126,15 +124,15 @@ public:
           f(std::move(f)), g(std::move(g)) {}
 
 private:
-    void operator()(float *in, float *out) const override {
+    void operator()(const float *in, float *out) const override {
         (*f)(in, out);
         (*g)(in, &out[f->out_dim]);
     }
 };
 
 class ProjectionImpl : public Map::MapImpl {
-    const std::shared_ptr<MapImpl> f;
-    const int i;
+    std::shared_ptr<MapImpl> f;
+    int i;
 
 public:
     ProjectionImpl() = delete;
@@ -145,7 +143,7 @@ public:
         : Map::MapImpl(f->in_dim, 1), f(std::move(f)), i(i) {}
 
 private:
-    void operator()(float *in, float *out) const override {
+    void operator()(const float *in, float *out) const override {
         float f_out[f->out_dim];
         (*f)(in, f_out);
         out[0] = f_out[i];
@@ -153,7 +151,7 @@ private:
 };
 
 class ConstantImpl : public Map::MapImpl {
-    const std::vector<float> values;
+    std::vector<float> values;
 
 public:
     ConstantImpl() = delete;
@@ -164,23 +162,22 @@ public:
       : Map::MapImpl(in_dim, values.size()), values(std::move(values)) {}
 
 private:
-    void operator()(float *in, float *out) const override {
+    void operator()(const float *in, float *out) const override {
         for (int i = 0; i < values.size(); i++) {
             out[i] = values[i];
         }
     }
 };
 
-Map::Map(std::function<void(float *, uint32_t, float *, uint32_t)> f,
-         uint32_t in_dim, uint32_t out_dim)
-    : pImpl(std::make_shared<FuncObjImpl>(f, in_dim, out_dim)),
+Map::Map(fn_t fn, int32_t in_dim, int32_t out_dim)
+    : pImpl(std::make_shared<FuncObjImpl>(fn, in_dim, out_dim)),
       inDim(in_dim), outDim(out_dim){}
 
-pxsort::Map::Map(void(*f)(float*, uint32_t, float*, uint32_t), uint32_t in_dim, uint32_t out_dim)
-        : pImpl(std::make_shared<FuncPtrImpl>(f, in_dim, out_dim)),
+pxsort::Map::Map(fp_t fp, int32_t in_dim, int32_t out_dim)
+        : pImpl(std::make_shared<FuncPtrImpl>(fp, in_dim, out_dim)),
           inDim(in_dim), outDim(out_dim){}
 
-pxsort::Map::Map(std::shared_ptr<MapImpl> pImpl, uint32_t in_dim, uint32_t out_dim)
+pxsort::Map::Map(std::shared_ptr<MapImpl> pImpl, int32_t in_dim, int32_t out_dim)
     : pImpl(std::move(pImpl)), inDim(in_dim), outDim(out_dim) {}
 
 std::vector<float> pxsort::Map::operator()(const std::vector<float> &x) const {
@@ -223,15 +220,15 @@ Map pxsort::Map::operator^(const Map &that) const {
 }
 
 Map pxsort::Map::operator[](int i) const {
-    int safe_i = PXSORT_MODULO(i, outDim);
+    int safe_i = modulo(i, outDim);
 
     return {std::make_shared<ProjectionImpl>(pImpl, safe_i), inDim, 1};
 }
 
 Map pxsort::Map::concatenate(const std::vector<Map> &maps) {
     std::vector<ConcatenationImpl::ImplPtr> impls(maps.size());
-    uint32_t in_dim = 0;
-    uint32_t out_dim = 0;
+    int32_t in_dim = 0;
+    int32_t out_dim = 0;
     for (int i = 0; i < maps.size(); i++) {
         in_dim += maps[i].inDim;
         out_dim += maps[i].outDim;
@@ -242,7 +239,7 @@ Map pxsort::Map::concatenate(const std::vector<Map> &maps) {
     return {pImpl, in_dim, out_dim};
 }
 
-void pxsort::Map::operator()(float *in, float *out) const {
+void pxsort::Map::operator()(const float *in, float *out) const {
     (*pImpl)(in, out);
 }
 
@@ -250,7 +247,7 @@ bool pxsort::Map::operator==(const Map &that) const {
     return this->pImpl == that.pImpl;
 }
 
-Map pxsort::Map::constant(std::vector<float> c, uint32_t in_dim) {
+Map pxsort::Map::constant(std::vector<float> c, int32_t in_dim) {
     auto pImpl = std::make_shared<ConstantImpl>(c, in_dim);
-    return {pImpl, in_dim, static_cast<uint32_t>(c.size())};
+    return {pImpl, in_dim, static_cast<int32_t>(c.size())};
 }

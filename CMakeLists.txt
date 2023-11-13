@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.18)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-project(pxsort VERSION 0.0.1)
+project(pxsort)
 message(STATUS "${PROJECT_NAME} version: ${PROJECT_VERSION}")
 
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)

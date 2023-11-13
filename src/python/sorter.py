@@ -1,1 +1,1 @@
-from ._native import Sorter, sort_segments
+from ._native import Sorter

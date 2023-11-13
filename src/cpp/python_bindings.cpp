@@ -6,7 +6,7 @@
 #include "Map.h"
 #include "Segment.h"
 #include "Sorter.h"
-#include "Compute.h"
+#include "geometry/Modulation.h"
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
@@ -19,6 +19,10 @@ void bindMap(py::module_ &m);
 void bindSegment(py::module_ &m);
 void bindSegmentPixels(py::module_ &m);
 void bindSorter(py::module_ &m);
+void bindEllipse(py::module_ &m);
+void bindPolygon(py::module_ &m);
+void bindSkew(py::module_ &m);
+void bindModulator(py::module_ &m);
 
 PYBIND11_MODULE(_native, m) {
     // todo: complete doc
@@ -39,10 +43,10 @@ PYBIND11_MODULE(_native, m) {
     bindSegment(m);
     bindSegmentPixels(m);
     bindSorter(m);
-
-    m.def("sort_segments", &sortSegments,
-          py::call_guard<py::gil_scoped_release>());
-
+    bindEllipse(m);
+    bindPolygon(m);
+    bindSkew(m);
+    bindModulator(m);
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
@@ -112,6 +116,11 @@ py::buffer_info imageBuffer(Image &img) {
 }
 
 void bindImage(py::module_ &m) {
+    py::enum_<Image::Topology>(m, "ImageTopology",
+        "Defines behaviour for out-of-bounds access of Image pixels.")
+        .value("Square", Image::SQUARE)
+        .value("Torus", Image::TORUS);
+
     py::class_<Image>(m, "Image", py::buffer_protocol())
             .def(py::init<uint32_t, uint32_t, uint32_t>())
             .def(py::init(&pyBufferToImage))
@@ -133,7 +142,7 @@ void bindMap(py::module_ &m) {
     py::class_<Map>(m, "Map")
             .def(py::init([](uint64_t f_ptr, uint32_t in_dim, uint32_t out_dim)
             {
-                return Map(reinterpret_cast<Map::FuncPtr>(f_ptr),
+                return Map(reinterpret_cast<Map::fp_t>(f_ptr),
                            in_dim, out_dim);
             }))
             .def_readonly("in_dim", &Map::inDim)
@@ -160,22 +169,57 @@ void bindSegment(py::module_ &m) {
 
     py::class_<Segment>(m, "Segment")
             .def(py::init<uint32_t, uint32_t, uint32_t, uint32_t>())
-            .def(py::init<std::vector<Segment::Coordinates>>())
-            .def("get_coordinates", &Segment::getCoordinates)
+            .def(py::init<std::vector<std::pair<int, int>>>())
             .def("get_pixels", &Segment::getPixels,
                  py::call_guard<py::gil_scoped_release>())
-            .def("put_pixels", &Segment::putPixels)
+            .def("put_pixels", &Segment::putPixels,
+                 py::call_guard<py::gil_scoped_release>())
             .def("__sub__", &Segment::operator-)
             .def("__and__", &Segment::operator&)
             .def("__or__", &Segment::operator|)
-            .def("sort_coordinates", &Segment::sorted,
+            .def("sort_with_function", [](const Segment &s, uint64_t f_ptr) {
+                     Segment::CoordinateProjection const cp
+                         = reinterpret_cast<Segment::CoordinateProjPtr>(f_ptr);
+                     return s.sorted(cp);
+                 },
                  py::call_guard<py::gil_scoped_release>())
-            .def("filter_coordinates", &Segment::filter,
+            .def("sort_along_angle", [](const Segment &s, float degrees) {
+                     return s.sorted(degrees);
+                 },
                  py::call_guard<py::gil_scoped_release>())
+            .def("masked", [](const Segment &s, uint64_t f_ptr) {
+                    Segment::CoordinateProjection const cp
+                        = reinterpret_cast<Segment::CoordinateProjPtr>(f_ptr);
+                    return s.filter(cp);
+                },
+                 py::call_guard<py::gil_scoped_release>())
+            .def("masked",
+                 [](const Segment& s, const Polygon& p) { return s.mask(p); },
+                 py::call_guard<py::gil_scoped_release>())
+            .def("masked",
+                 [](const Segment& s, const Ellipse& e) { return s.mask(e); },
+                 py::call_guard<py::gil_scoped_release>())
+            .def("function_partition",
+                 [](const Segment &s, uint64_t f_ptr, int n) {
+                     Segment::CoordinateProjection const cp
+                         = reinterpret_cast<Segment::CoordinateProjPtr>(f_ptr);
+                     return s.partition(cp, n);
+                 },
+                 py::call_guard<py::gil_scoped_release>())
+            .def("angled_partition",
+                 [](const Segment &s, float degrees, int n) {
+                     return s.partition(degrees, n);
+                 },
+                 py::call_guard<py::gil_scoped_release>())
+            .def("translated", [](const Segment &s, int dx, int dy) {
+                return s.translate(dx, dy);
+            })
             .def("size", &Segment::size)
-            .def("__getitem__", &Segment::operator[]);
+            .def("__getitem__", [](const Segment& s, int i) {
+                auto const pt = s[i];
+                return std::pair<int, int>(pt.x(), pt.y());
+            });
 }
-
 
 SegmentPixels pyBufferToSegmentPixels(const py::buffer& buf) {
     /* Request a buffer descriptor from Python */
@@ -205,7 +249,7 @@ SegmentPixels pyBufferToSegmentPixels(const py::buffer& buf) {
     auto data = static_cast<float *>(info.ptr);
     for(int i = 0; i < len; i++)
         for (int cn = 0; cn < depth; cn++)
-            segPx.at(i)[cn] = data[i * pxStride + cn * cnStride];
+            segPx.px(i)[cn] = data[i * pxStride + cn * cnStride];
 
     return segPx;
 }
@@ -213,7 +257,7 @@ SegmentPixels pyBufferToSegmentPixels(const py::buffer& buf) {
 py::buffer_info segmentPixelsBuffer(const SegmentPixels &segPx) {
     auto spu = segPx.unrestricted();
     return {
-            spu.at(0),
+            spu.px(0),
             sizeof(float),
             py::format_descriptor<float>::format(),
             2,
@@ -242,6 +286,82 @@ void bindSorter(py::module_ &m) {
             .def_static("create_bucket_sorter", &Sorter::bucketSort)
             .def_static("create_heapify_sorter", &Sorter::heapify)
             .def_static("create_bubble_sorter", &Sorter::bubble)
+            .def_static("create_pseudo_bubble_sorter", &Sorter::pseudoBubble)
             .def("__call__", &Sorter::operator(),
                  py::call_guard<py::gil_scoped_release>());
+}
+
+void bindEllipse(py::module_ &m) {
+    py::class_<Ellipse>(m, "Ellipse")
+            .def(py::init<float, float, float>())
+            .def(py::init<float, float, float, float, float>())
+            .def("contains_point", [](const Ellipse &e, float x, float y) {
+                return e.containsPoint(Point2f(x, y));
+            })
+            .def("translated", &Ellipse::translate)
+            .def("rotated", &Ellipse::rotate)
+            .def("scaled", &Ellipse::scale)
+            .def("modulated", &Ellipse::modulate);
+}
+
+void bindPolygon(py::module_ &m) {
+    py::class_<Polygon>(m, "Polygon")
+            .def(py::init<const std::vector<std::pair<float, float>> &>())
+            .def(py::init<float, float, float, float>())
+            .def("contains_point", [](const Polygon &p, float x, float y) {
+                return p.containsPoint(Point2f(x, y));
+            })
+            .def("sheared", &Polygon::shear)
+            .def("translated", &Polygon::translate)
+            .def("rotated", &Polygon::rotate)
+            .def("scaled", &Polygon::scale)
+            .def("modulated", &Polygon::modulate,
+                 py::call_guard<py::gil_scoped_release>());
+}
+
+
+void bindSkew(py::module_ &m) {
+    py::enum_<Skew::OutOfBoundsPolicy>(m, "OutOfBoundsPolicy",
+       "The policy to apply to determine the skew of points lying outside of "
+       "a Skew's configured bounds.")
+            .value("Wrap", Skew::WRAP)
+            .value("Clamp", Skew::CLAMP);
+
+    py::class_<Skew>(m, "Skew")
+            .def(py::init())
+            .def(py::init([](const std::vector<std::pair<int, int>>& s,
+                             Skew::OutOfBoundsPolicy oobp){
+                std::vector<Point> pts(s.size());
+                for (int i = 0; i < s.size(); i++) {
+                    auto &[x, y] = s[i];
+                    pts[i] = Point(x, y);
+                }
+                return Skew(pts, oobp);
+            }))
+            .def(py::init([](uint64_t fPtr, int im_w, int im_h, int im_d,
+                             Skew::OutOfBoundsPolicy p ){
+                Skew::SkewFunction f = reinterpret_cast<Skew::SkewFnPtr>(fPtr);
+                return Skew(f, im_w,  im_h, im_d, p);
+            }), py::call_guard<py::gil_scoped_release>())
+            .def("scaled", &Skew::scale)
+            .def("rotated", &Skew::rotate)
+            .def("translated", &Skew::translate)
+            .def("__call__", &Skew::operator());
+}
+
+void bindModulator(py::module_ &m) {
+    py::class_<modulator::Modulator>(m, "Modulator")
+            .def(py::init([](uint64_t fp) -> modulator::Modulator {
+                return {reinterpret_cast<float(*)(float)>(fp)};
+            }))
+            .def("__add__", &modulator::sum)
+            .def("__add__", &modulator::phaseShift)
+            .def("__mul__", &modulator::freqShift)
+            .def("__call__", &modulator::Modulator::operator())
+            .def_static("identity", &modulator::identity)
+            .def_static("sine_wave", &modulator::sinOscillator)
+            .def_static("triangle_wave", &modulator::triangleOscillator)
+            .def_static("saw_wave", &modulator::sawOscillator)
+            .def_static("square_wave", &modulator::squareOscillator)
+            .def_static("stepwise", &modulator::stepwise);
 }

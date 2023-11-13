@@ -1,161 +1,18 @@
+#include <set>
 #include <unordered_set>
 #include <cassert>
+#include <Eigen/Geometry>
+#include <utility>
 
 #include "Segment.h"
 #include "Image.h"
+#include "util.h"
 
 using namespace pxsort;
-
-struct SegmentPixels::View {
-    virtual ~View() = default;
-
-    virtual int operator[](int idx) const = 0;
-    [[nodiscard]]
-    virtual int size() const = 0;
-};
-
-struct Subarray : public SegmentPixels::View {
-    const int startIdx;
-    const int length;
-
-    ~Subarray() override = default;
-
-    Subarray(size_t startIdx, size_t length)
-       : startIdx(startIdx), length(length) {}
-
-private:
-    int operator[](int idx) const override;
-    int size() const override;
-};
-
-struct Filter : public SegmentPixels::View {
-    const std::vector<int> indices;
-
-    ~Filter() override = default;
-
-    Filter(std::vector<int> indices) : indices(std::move(indices)) {}
-
-private:
-    int operator[](int idx) const override;
-    int size() const override;
-};
-
-SegmentPixels::SegmentPixels(uint32_t nPixels, uint32_t depth)
-: nPixels(nPixels), pixelDepth(depth),
-  pixelData(new float[depth * nPixels]),
-  view(std::make_shared<Subarray>(0, nPixels)) {
-    assert(depth > 0);
-}
-
-SegmentPixels SegmentPixels::asdfRestriction(const Map& startTest,
-                                             const Map& endTest) const {
-    auto start = 0;
-    for (; start < nPixels; start++) {
-        float res;
-        startTest(at(start), &res);
-
-        if (res >= 0.0) break;
-    }
-
-    auto end = nPixels - 1;
-    for (; end >= start; end--) {
-        float res;
-        endTest(at(end), &res);
-
-        if (res >= 0.0) break;
-    }
-    auto length = end - start;
-
-    return {nPixels, pixelDepth, pixelData,
-            std::make_shared<Subarray>(start, length)};
-}
-
-pxsort::SegmentPixels::SegmentPixels(int nPixels, int pixelDepth,
-                                     std::shared_ptr<float[]> pixelData,
-                                     std::shared_ptr<View> view)
-    : nPixels(nPixels), pixelDepth(pixelDepth),
-    pixelData(std::move(pixelData)), view(std::move(view)) {}
-
-SegmentPixels pxsort::SegmentPixels::filterRestriction(const Map &filterTest) const {
-    std::vector<int> indices;
-    for(int idx = 0; idx < nPixels; idx++) {
-        float res;
-        filterTest(at(idx), &res);
-        if (res >= 0)
-            indices.push_back(idx);
-    }
-
-    return {nPixels, pixelDepth, pixelData, std::make_shared<Filter>(indices)};
-}
-
-SegmentPixels pxsort::SegmentPixels::unrestricted() const {
-    return {nPixels, pixelDepth, pixelData,
-            std::make_shared<Subarray>(0, nPixels)};
-}
-
-int pxsort::SegmentPixels::size() const {
-    return view->size();
-}
-
-float *pxsort::SegmentPixels::at(int viewIdx) const {
-    auto trueIdx = (*view)[viewIdx];
-    auto scaledIdx = trueIdx * pixelDepth;
-    return &pixelData[scaledIdx];
-}
-
-SegmentPixels pxsort::SegmentPixels::deepCopy() const {
-    std::shared_ptr<float[]> dataCopy(new float[nPixels * pixelDepth]);
-    std::copy_n(this->pixelData.get(), nPixels * pixelDepth, dataCopy.get());
-
-    return {nPixels, pixelDepth, std::move(dataCopy), view};
-}
-
-SegmentPixels pxsort::SegmentPixels::restrictToIndices(
-        const std::vector<int> &indices) const {
-    std::vector<int> validIndices;
-    for (auto &idx : indices)
-        if (0 <= idx && idx < nPixels)
-            validIndices.push_back(idx);
-    return {nPixels, pixelDepth,
-            pixelData, std::make_shared<Filter>(validIndices)};
-}
-
-std::vector<int> pxsort::SegmentPixels::restrictionIndices() const {
-    std::vector<int> indices(view->size());
-    for (int i = 0; i < view->size(); i++)
-        indices[i] = (*view)[i];
-    return indices;
-}
-
-pxsort::SegmentPixels::SegmentPixels()
-: SegmentPixels(1, 1) {}
-
-int Subarray::operator[](int idx) const {
-#ifdef PXSORT_DEBUG
-    assert(idx >= 0);
-    assert(idx < size());
-#endif // PXSORT_DEBUG
-    return startIdx + idx;
-}
-
-int Subarray::size() const {
-    return length;
-}
-
-int Filter::operator[](int idx) const {
-#ifdef PXSORT_DEBUG
-    assert(idx >= 0);
-    assert(idx < indices.size());
-#endif // PXSORT_DEBUG
-    return indices[idx];
-}
-
-int Filter::size() const {
-    return indices.size();
-}
+using namespace Eigen;
 
 int Segment::getIndexForTraversal(int idx, Traversal t) const {
-    idx = PXSORT_MODULO(idx, this->size());
+    idx = modulo(idx, this->size());
     switch (t) {
         case REVERSE:
             return (this->size() - 1) - idx;
@@ -171,85 +28,78 @@ int Segment::getIndexForTraversal(int idx, Traversal t) const {
 
 int Segment::getBTBFIndex(int idx) const {
 
-    int depth = PXSORT_LOG_2(idx) - 1;
-    int nSubtrees = 1 << depth;
-    int subtree = PXSORT_MODULO((idx + 1), nSubtrees);
+    int const depth = log2(idx) - 1;
+    int const nSubtrees = 1 << depth;
+    int const subtree = modulo((idx + 1), nSubtrees);
 
-    int fullHeight = PXSORT_LOG_2(this->size()) - 1;
-    int subtreeHeight = fullHeight - depth;
+    int const fullHeight = log2(this->size()) - 1;
+    int const subtreeHeight = fullHeight - depth;
 
-    int subtreeSize = (1 << subtreeHeight) - 1;
-    int subtreeLoIdx = subtree * subtreeSize;
+    int const subtreeSize = (1 << subtreeHeight) - 1;
+    int const subtreeLoIdx = subtree * subtreeSize;
 
-    int forwardIdx = subtreeHeight == 1 ? (2 * subtree)
+    int const forwardIdx = subtreeHeight == 1 ? (2 * subtree)
                                         : (subtreeLoIdx + (subtreeSize / 2));
     return forwardIdx;
 }
 
-Segment::Segment(uint32_t width, uint32_t height, uint32_t x0, uint32_t y0)
-  : pxCoords(width * height) {
+Segment::Segment(int width, int height, int x0, int y0)
+  : points(new Point[width * height]),
+    _size(width * height), translation(x0, y0) {
     int i = 0;
-    for (int dx = 0; dx < width; dx++)
-        for (int dy = 0; dy < height; dy++) {
-            pxCoords[i] = {x0 + dx, y0 + dy};
+    for (int x = 0; x < width; x++)
+        for (int y = 0; y < height; y++) {
+            points[i] = {x, y};
             i++;
         }
 }
 
-Segment::Segment(std::vector<Coordinates> pixelCoordinates)
-    : pxCoords(std::move(pixelCoordinates)) {}
-
-Segment::Segment(std::vector<Coordinates> pixelCoordinates,
-                 const std::optional<Map>& key) :
-        pxCoords(std::move(pixelCoordinates)), key(key) {}
-
-static void noSkew(float *in, int inLen, float *out, float outLen) {
-    out[0] = in[0];
-    out[1] = in[1];
+Segment::Segment(const std::vector<Point>& points)
+    : points(new Point[points.size()]),
+      _size(points.size()), translation{0, 0} {
+    for (int i = 0; i < size(); i++) {
+        this->points[i] = points[i];
+    }
 }
 
 SegmentPixels Segment::getPixels(const Image &img,
                                  Segment::Traversal traversal,
-                                 const std::optional<Map>& channelSkew) const {
-    auto skew = channelSkew.value_or(Map(noSkew, 3, 2));
+                                 const std::optional<Skew>& _skew,
+                                 Image::Topology imTpg) const {
+    auto skew = _skew.value_or(Skew());
 
-    auto nPixels = pxCoords.size();
-    SegmentPixels segPx(nPixels, img.depth);
+    using getPx_t = float*(*)(Image&, const Point&);
+    getPx_t getPx = (imTpg == Image::SQUARE) ? safe_ptr<Image::SQUARE>
+                                             : safe_ptr<Image::TORUS>;
+
+    SegmentPixels segPx(size(), img.depth);
 
     #pragma omp parallel for default(none) \
-            shared(img, traversal, segPx, nPixels, skew)
-    for (int i = 0; i < nPixels; i++) {
+            shared(img, traversal, segPx, skew, getPx)
+    for (int i = 0; i < size(); i++) {
         auto idx = getIndexForTraversal(i, traversal);
 
-        const auto &[x, y] = pxCoords[idx];
-        float *pixel = segPx.at(idx);
+        auto pt = points[idx] + translation;
+        float *pixel = segPx.px(idx);
 
         #pragma omp simd
         for (int cn = 0; cn < img.depth; cn++) {
-            float skewIn[] = {static_cast<float>(x),
-                              static_cast<float>(y),
-                              static_cast<float>(cn)};
-            float skewOut[2];
-            skew(skewIn, skewOut);
-            int skx = static_cast<int>(skewOut[0]);
-            int sky = static_cast<int>(skewOut[1]);
-            pixel[cn] = img.at(
-                    min(img.width - 1, max(0, skx)),
-                    min(img.height - 1, max(0, sky)),
-                    cn);
+            auto skewedPt = skew(pt, cn);
+            pixel[cn] = getPx((Image &) img, skewedPt)[cn];
         }
     }
 
     return segPx;
 }
 
-uint32_t Segment::size() const {
-    return pxCoords.size();
+int Segment::size() const {
+    return _size;
 }
 
 void Segment::putPixels(Image &img,
                         Segment::Traversal traversal,
-                        const SegmentPixels &segPx) const {
+                        const SegmentPixels &segPx,
+                        Image::Topology imTpg) const {
     const SegmentPixels fullPx = segPx.unrestricted();
 
 #ifdef PXSORT_DEBUG
@@ -257,141 +107,244 @@ void Segment::putPixels(Image &img,
     assert(size() == fullPx.size());
 #endif
 
-    #pragma omp parallel for default(none) shared(img, traversal, fullPx)
+    using getPx_t = float*(*)(Image&, const Point&);
+    getPx_t getPx = (imTpg == Image::SQUARE) ? safe_ptr<Image::SQUARE>
+                                             : safe_ptr<Image::TORUS>;
+
+
+#pragma omp parallel for default(none) shared(img, traversal, fullPx, getPx)
     for (int i = 0; i < size(); i++) {
         auto idx = getIndexForTraversal(i, traversal);
-        const auto &[x, y] = pxCoords[idx];
+        const auto pt = points[idx] + translation;
 
-        float *segPixel = fullPx.at(idx);
-        float *imgPixel = img.ptr(x, y);
+        const float *segPixel = fullPx.px(idx);
+        float *imgPixel = getPx(img, pt);
 
         std::copy_n(segPixel, img.depth, imgPixel);
     }
 }
 
-template <>
-struct std::hash<Segment::Coordinates> {
-    std::size_t operator()(Segment::Coordinates const& coords) const noexcept {
-        uint64_t x = std::get<0>(coords);
-        uint64_t y = std::get<1>(coords);
-        return std::hash<uint64_t>()(x | (y << 32));
-    }
-};
-
 Segment Segment::operator-(const Segment &other) const {
-    std::unordered_set<Coordinates> otherCoords(other.pxCoords.begin(),
-                                                other.pxCoords.end());
-    std::vector<Coordinates> difference;
-    for (auto &coords : this->pxCoords) {
-        if (!otherCoords.contains(coords)) {
-            difference.push_back(coords);
+    std::unordered_set<Point> otherPointSet;
+    for (int i = 0; i < other.size(); i++)
+        otherPointSet.insert(other.points[i] + other.translation);
+
+    std::vector<Point> difference;
+    for (int i = 0; i < size(); i++) {
+        if (!otherPointSet.contains(points[i] + translation)) {
+            difference.push_back(points[i]);
         }
     }
-    return {difference, key};
+
+    return Segment(difference).translate(translation);
 }
 
 Segment Segment::operator&(const Segment &other) const {
-    std::unordered_set<Coordinates> otherCoords(other.pxCoords.begin(),
-                                                other.pxCoords.end());
-    std::vector<Coordinates> intersection;
-    for (auto &coords : this->pxCoords) {
-        if (otherCoords.contains(coords)) {
-            intersection.push_back(coords);
+    std::unordered_set<Point> otherPointSet;
+    for (int i = 0; i < other.size(); i++)
+        otherPointSet.insert(other.points[i] + other.translation);
+
+    std::vector<Point> intersection;
+    for (int i = 0; i < size(); i++) {
+        if (otherPointSet.contains(points[i] + translation)) {
+            intersection.push_back(points[i]);
         }
     }
-    return {intersection, key};
+    return Segment(intersection).translate(translation);
 }
 
 struct CoordinateComparator {
-    using CompareFunc = std::function<bool (const Segment::Coordinates&,
-                                            const Segment::Coordinates&)>;
+    using CompareFunc = std::function<bool (const Point&,
+                                            const Point&)>;
 
-    const CompareFunc less;
+    CompareFunc less;
 
     bool operator()(
-            const Segment::Coordinates& lhs,
-            const Segment::Coordinates& rhs) const {
+            const Point& lhs,
+            const Point& rhs) const {
         return less(lhs, rhs);
     }
 
     static
     bool defaultLess(
-            const Segment::Coordinates& lhs,
-            const Segment::Coordinates& rhs) noexcept {
-        auto &[lx, ly] = lhs;
-        auto &[rx, ry] = rhs;
+            const Point& lhs,
+            const Point& rhs) noexcept {
+        auto lx = lhs.x();
+        auto ly = lhs.y();
+        auto rx = rhs.x();
+        auto ry = rhs.y();
         return ly < ry || (ly == ry && lx < rx);
     }
 
     static
-    CompareFunc wrapMap(const Map &map) {
-        return [=](const Segment::Coordinates& lhs,
-                   const Segment::Coordinates& rhs) {
-            auto &[lx, ly] = lhs;
-            auto &[rx, ry] = rhs;
+    CompareFunc wrapCP(const Segment::CoordinateProjection &cp) {
+        return [=](const Point& lhs,
+                   const Point& rhs) {
+            float left = cp(lhs.x(), lhs.y());
+            float right = cp(rhs.x(), rhs.y());
 
-            float lhsF[] = {static_cast<float>(lx), static_cast<float>(ly)};
-            float lhsKey;
-            float rhsF[] = {static_cast<float>(rx), static_cast<float>(ry)};
-            float rhsKey;
-
-            map(lhsF, &lhsKey);
-            map(rhsF, &rhsKey);
-
-            return lhsKey < rhsKey;
+            return left < right;
         };
     }
 
     CoordinateComparator() : less(defaultLess) {}
 
-    explicit CoordinateComparator(std::optional<Map> keyMap)
-      : less(keyMap.has_value() ? wrapMap(keyMap.value()) : defaultLess) {}
+    explicit CoordinateComparator(
+            std::optional<Segment::CoordinateProjection> key)
+      : less(key.has_value() ? wrapCP(key.value()) : defaultLess) {}
 };
 
-Segment Segment::operator|(const Segment &that) const {
-    std::set<Coordinates, CoordinateComparator>
-            unionSet(CoordinateComparator(this->key));
-    unionSet.insert(this->pxCoords.begin(), this->pxCoords.end());
-    unionSet.insert(that.pxCoords.begin(), that.pxCoords.end());
+Segment Segment::operator|(const Segment &other) const {
+    std::unordered_set<Point> unionSet;
+    for (int i = 0; i < size(); i++)
+        unionSet.insert(points[i] + translation);
+    for (int i = 0; i < other.size(); i++)
+        unionSet.insert(other.points[i] + other.translation);
 
-    std::vector<Coordinates> unionVec(unionSet.begin(), unionSet.end());
-    return {unionVec, key};
+    std::vector<Point> const unionVec(unionSet.begin(), unionSet.end());
+    return Segment(unionVec);
 }
 
-Segment Segment::sorted(const Map &coordKey) const {
-    // optimization to avoid re-sorting with the same key.
-    if (key.has_value() && key.value() == coordKey) return *this;
+Segment Segment::sorted(const CoordinateProjection &key) const {
+    const std::shared_ptr<Point[]> sortedPoints(new Point[size()]);
+    for (int i = 0; i < size(); i++)
+        sortedPoints[i] = points[i];
+    CoordinateComparator const less(key);
+    std::sort(sortedPoints.get(), sortedPoints.get() + size(), less);
 
-    std::vector<Coordinates> sortedCoords(pxCoords.begin(), pxCoords.end());
-    CoordinateComparator less(coordKey);
-    std::sort(sortedCoords.begin(), sortedCoords.end(), less);
-
-    return {sortedCoords, coordKey};
+    return {sortedPoints, size(), translation};
 }
 
-Segment Segment::filter(const Map &coordPred) const {
-    std::vector<Coordinates> filteredCoords;
-    for (auto &cInt : pxCoords) {
-        auto &[x, y] = cInt;
-        float cFloat[] = {static_cast<float>(x), static_cast<float>(y)};
-        float cPred;
-
-        coordPred(cFloat, &cPred);
-        if (cPred >= 0)
-            filteredCoords.push_back(cInt);
+Segment Segment::filter(const CoordinateProjection &predicate) const {
+    std::vector<Point> filteredPoints;
+    for (int i = 0; i < size(); i++) {
+        auto pt = points[i] + translation;
+        if (predicate(pt.x(), pt.y()) >= 0)
+            filteredPoints.push_back(points[i]);
     }
 
-    return {filteredCoords, key};
+    return Segment(filteredPoints).translate(translation);
 }
 
-Segment::Coordinates Segment::operator[](int idx) const {
-    return pxCoords[PXSORT_MODULO(idx, this->size())];
+Point Segment::operator[](int idx) const {
+    return points[modulo(idx, size())] + translation;
 }
 
-std::vector<Segment::Coordinates> &Segment::getCoordinates() {
-    return pxCoords;
+Segment Segment::translate(int dx, int dy) const {
+    return translate({dx, dy});
 }
 
-int SegmentPixels::depth() const {
-    return pixelDepth;
+Segment Segment::translate(Point t) const {
+    return {points, size(), translation + t};
 }
+
+Segment::Segment(std::shared_ptr<Point[]> points,
+                 int nPoints, Point translation)
+    : points(std::move(points)), _size(nPoints), translation(std::move(translation)) {}
+
+Segment Segment::mask(const Polygon &polygon) const {
+    std::vector<Point> maskedPoints;
+    std::vector<bool> mask(size());
+    #pragma omp parallel for default(none) shared(polygon, mask)
+    for (int i = 0; i < size(); i++)
+        mask[i] = polygon.containsPoint(points[i] + translation);
+
+    for (int i = 0; i < size(); i++)
+        if (mask[i])
+            maskedPoints.push_back(points[i]);
+
+    return Segment(maskedPoints).translate(translation);
+}
+
+Segment Segment::mask(const Ellipse &ellipse) const {
+    std::vector<Point> maskedPoints;
+    for (int i = 0; i < size(); i++) {
+        if (ellipse.containsPoint(points[i] + translation)) {
+            maskedPoints.push_back(points[i]);
+        }
+    }
+    return Segment(maskedPoints).translate(translation);
+}
+
+Segment::Segment(std::vector<std::pair<int, int>> points)
+        : points(new Point[points.size()]),
+          _size(points.size()), translation{0, 0} {
+    for (int i = 0; i < size(); i++) {
+        auto &[x, y] = points[i];
+        this->points[i] = {x, y};
+    }
+}
+
+Hyperplane<float, 2> getHyperplaneForAngle(float degrees){
+    // pick a hyperplane guaranteed to lie outside of image boundaries
+    float const radians = deg2rad(degrees);
+    auto const rot = Rotation2Df(radians);
+    float const frac = ((degrees / 360.0) + 1.0) / 360.0;
+
+    Point2f const p = rot * Point2f(1, 0);
+    Point2f delta;
+
+    if (degrees < 0.25)
+        delta = {0, 0};
+    else if (degrees < 0.5)
+        delta = {IMAGE_MAX_WIDTH, 0};
+    else if (degrees < 0.75)
+        delta = {IMAGE_MAX_WIDTH, IMAGE_MAX_HEIGHT};
+    else
+        delta = {0, IMAGE_MAX_HEIGHT};
+
+    return Hyperplane<float, 2>::Through(p + delta, delta);
+}
+
+Segment Segment::sorted(float degrees) const {
+    // get perpendicular hyperplane and sort according to distance from it
+    auto const h = getHyperplaneForAngle(degrees + 90);
+    CoordinateProjection const key = [&](int x, int y) {
+        return abs(h.signedDistance(Vector2f(x, y)));
+    };
+    return this->sorted(key);
+}
+
+std::vector<Segment> Segment::partition(float degrees, int n) const {
+    auto const h = getHyperplaneForAngle(degrees);
+    CoordinateProjection const cp = [&](int x, int y){
+        return h.signedDistance(Vector2f(x, y));
+    };
+
+    return partition(cp, n);
+}
+
+std::vector<Segment> Segment::partition(const Segment::CoordinateProjection &cp,
+                                        int n) const
+{
+    n = max(1, n);
+
+    std::vector<std::vector<Point>> partPts(n);
+    float dMin = INFINITY, dMax = -INFINITY;
+    float d[size()];
+
+    #pragma omp parallel for reduction(min:dMin) reduction(max:dMax) \
+            default(none) shared(d, cp)
+    for (int i = 0; i < size(); i++) {
+        auto &pt = points[i];
+        d[i] = cp(pt.x(), pt.y());
+        dMin = min(dMin, d[i]);
+        dMax = max(dMax, d[i]);
+    }
+
+    float const step =
+            (dMax - dMin) <= 0 ? 1 : (dMax - dMin) / static_cast<float>(n);
+    for (int i = 0; i < size(); i++) {
+        int const part = min(n - 1, static_cast<int>((d[i] - dMin) / step));
+        partPts[part].push_back(points[i]);
+    }
+
+    std::vector<Segment> parts;
+    for (int i = 0; i < n; i++) {
+        if (!partPts[i].empty())
+            parts.push_back(Segment(partPts[i]).translate(translation));
+    }
+    return parts;
+}
+
+
